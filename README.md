@@ -51,6 +51,13 @@ abort|BOOLEAN|
 
 Properties of ``options``
 
+* General
+
+[URL](https://curl.haxx.se/libcurl/c/CURLOPT_URL.html)  
+[USERNAME](https://curl.haxx.se/libcurl/c/CURLOPT_USERNAME.html)  
+[PASSWORD](https://curl.haxx.se/libcurl/c/CURLOPT_PASSWORD.html)  
+[PRIVATE](https://curl.haxx.se/libcurl/c/CURLOPT_PRIVATE.html)  
+
 * Proxy
 
 [PROXY](https://curl.haxx.se/libcurl/c/CURLOPT_PROXY.html)  string  
