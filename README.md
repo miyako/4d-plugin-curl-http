@@ -89,7 +89,7 @@ Properties of ``options``
 [CUSTOMREQUEST](https://curl.haxx.se/libcurl/c/CURLOPT_CUSTOMREQUEST.html)  string  
 [HTTPAUTH](https://curl.haxx.se/libcurl/c/CURLOPT_HTTPAUTH.html)  values: ``ANY`` ``ANYSAFE`` ``BASIC`` ``DIGEST`` ``NEGOTIATE`` ``NTLM``  
 
-** About HTTP **
+**About HTTP**
 
 a special option named ``REQUEST`` and ``RESPONSE`` can be used to specify a file as input an output.
 
