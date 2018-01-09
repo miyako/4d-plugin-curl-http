@@ -58,6 +58,41 @@ Properties of ``options``
 [PASSWORD](https://curl.haxx.se/libcurl/c/CURLOPT_PASSWORD.html)  string  
 [PRIVATE](https://curl.haxx.se/libcurl/c/CURLOPT_PRIVATE.html)  string  
 
+* HTTP
+
+[UPLOAD](https://curl.haxx.se/libcurl/c/CURLOPT_UPLOAD.html)  number  
+[NOBODY](https://curl.haxx.se/libcurl/c/CURLOPT_NOBODY.html)  number  
+[HTTP_VERSION](https://curl.haxx.se/libcurl/c/CURLOPT_HTTP_VERSION.html)  value: ``1.0`` ``1.1`` ``2`` ``2_TLS`` ``2_PRIOR_KNOWLEDGE``  
+[PROXYHEADER](https://curl.haxx.se/libcurl/c/CURLOPT_PROXYHEADER.html)  value: ``["Shoesize: 10", "Accept:"...]``  
+[HTTPHEADER](https://curl.haxx.se/libcurl/c/CURLOPT_HTTPHEADER.html)  value: ``["Shoesize: 10", "Accept:"...]``  
+[HEADEROPT](https://curl.haxx.se/libcurl/c/CURLOPT_HEADEROPT.html)  value: ``UNIFIED``, ``SEPARATE``  
+[AUTOREFERER](https://curl.haxx.se/libcurl/c/CURLOPT_AUTOREFERER.html)  number  
+[ACCEPT_ENCODING](https://curl.haxx.se/libcurl/c/CURLOPT_ACCEPT_ENCODING.html)  string  
+[FOLLOWLOCATION](https://curl.haxx.se/libcurl/c/CURLOPT_FOLLOWLOCATION.html)  number  
+[UNRESTRICTED_AUTH](https://curl.haxx.se/libcurl/c/CURLOPT_UNRESTRICTED_AUTH.html)  number  
+[REFERER](https://curl.haxx.se/libcurl/c/CURLOPT_REFERER.html)  string  
+[USERAGENT](https://curl.haxx.se/libcurl/c/CURLOPT_USERAGENT.html)  string  
+[HTTP200ALIASES](https://curl.haxx.se/libcurl/c/CURLOPT_HTTP200ALIASES.html)  value] ``["ICY 200 OK", "WEIRDO 99 FINE"...]``  
+[COOKIE](https://curl.haxx.se/libcurl/c/CURLOPT_COOKIE.html)  string  
+[COOKIEFILE](https://curl.haxx.se/libcurl/c/CURLOPT_COOKIEFILE.html)  path  
+[COOKIEJAR](https://curl.haxx.se/libcurl/c/CURLOPT_COOKIEJAR.html)  path  
+[COOKIESESSION](https://curl.haxx.se/libcurl/c/CURLOPT_COOKIESESSION.html)  number  
+[COOKIELIST](https://curl.haxx.se/libcurl/c/CURLOPT_COOKIELIST.html)  string  
+[REQUEST_TARGET](https://curl.haxx.se/libcurl/c/CURLOPT_REQUEST_TARGET.html)  string  
+[IGNORE_CONTENT_LENGTH](https://curl.haxx.se/libcurl/c/CURLOPT_IGNORE_CONTENT_LENGTH.html)  number  
+[CONTENT_DECODING](https://curl.haxx.se/libcurl/c/CURLOPT_HTTP_CONTENT_DECODING.html)  number  
+[TRANSFER_ENCODING](https://curl.haxx.se/libcurl/c/CURLOPT_TRANSFER_ENCODING.html)  number  
+[TRANSFER_DECODING](https://curl.haxx.se/libcurl/c/CURLOPT_HTTP_TRANSFER_DECODING.html)  number  
+[RANGE](https://curl.haxx.se/libcurl/c/CURLOPT_RANGE.html)  string  
+[RESUME_FROM](https://curl.haxx.se/libcurl/c/CURLOPT_RESUME_FROM.html)  number
+[RESUME_FROM_LARGE](https://curl.haxx.se/libcurl/c/CURLOPT_RESUME_FROM_LARGE.html)  string  
+[CUSTOMREQUEST](https://curl.haxx.se/libcurl/c/CURLOPT_CUSTOMREQUEST.html)  string  
+[HTTPAUTH](https://curl.haxx.se/libcurl/c/CURLOPT_HTTPAUTH.html)  values: ``ANY`` ``ANYSAFE`` ``BASIC`` ``DIGEST`` ``NEGOTIATE`` ``NTLM``  
+
+** About HTTP **
+
+a special option named ``REQUEST`` and ``RESPONSE`` can be used to specify a file as input an output.
+
 * Limits
 
 [CONNECTTIMEOUT](https://curl.haxx.se/libcurl/c/CURLOPT_CONNECTTIMEOUT.html)  number  
