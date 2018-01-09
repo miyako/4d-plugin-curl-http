@@ -46,3 +46,20 @@ userInfo|TEXT|the text passed as the ``PRIVATE`` property of ``option``
 abort|BOOLEAN|
 
 [``CURLcode``](https://curl.haxx.se/libcurl/c/libcurl-errors.html) is returned in ``error``. when ``True`` is returned from the callback method, ``CURLE_ABORTED_BY_CALLBACK (42)`` is returned. same if the process has been aborted via the runtime explorer. aborting the debugger will not kill the process immediately.
+
+---
+
+Properties of ``options``
+
+* Proxy
+
+[PROXY](https://curl.haxx.se/libcurl/c/CURLOPT_PROXY.html)  string  
+[NOPROXY](https://curl.haxx.se/libcurl/c/CURLOPT_NOPROXY.html)  string  
+[PROXYPORT](https://curl.haxx.se/libcurl/c/CURLOPT_PROXYPORT.html)  number  
+[PROXYTYPE](https://curl.haxx.se/libcurl/c/CURLOPT_PROXYTYPE.html)  string  
+
+**About proxies**  
+
+``libcurl`` respects proxy environment variables named ``http_proxy``, ``all_proxy``, ``no_proxy`` etc. options take precedence over environment variables. 
+
+a special option named ``AUTOPROXY`` can be used to let ``libproxy`` find the proxy via WPAD and PAC.
