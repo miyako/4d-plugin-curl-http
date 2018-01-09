@@ -65,6 +65,7 @@ Properties of ``options``
 [PROXYPORT](https://curl.haxx.se/libcurl/c/CURLOPT_PROXYPORT.html)  number  
 [PROXYTYPE](https://curl.haxx.se/libcurl/c/CURLOPT_PROXYTYPE.html)  string  
 [PROXYUSERPWD](https://curl.haxx.se/libcurl/c/CURLOPT_PROXYUSERPWD.html)  string  
+[PROXYAUTH](https://curl.haxx.se/libcurl/c/CURLOPT_PROXYAUTH.html)  values: ``CURLAUTH_ANY``, ``CURLAUTH_ANYSAFE``  
 [PROXY_SERVICE_NAME](https://curl.haxx.se/libcurl/c/CURLOPT_PROXY_SERVICE_NAME.html)  string  
 [PROXY_SSLCERT](https://curl.haxx.se/libcurl/c/CURLOPT_PROXY_SSLCERT.html)  path  
 [PROXY_SSLKEY](https://curl.haxx.se/libcurl/c/CURLOPT_PROXY_SSLKEY.html)  path  
