@@ -79,7 +79,7 @@ values: ``USESSL_NONE`` ``USESSL_TRY`` ``USESSL_CONTROL`` ``USESSL_ALL``
 [SSL_VERIFYHOST](https://curl.haxx.se/libcurl/c/CURLOPT_SSL_VERIFYHOST.html)  number    
 [SSL_VERIFYPEER](https://curl.haxx.se/libcurl/c/CURLOPT_SSL_VERIFYPEER.html)  number  
 [CAINFO](https://curl.haxx.se/libcurl/c/CURLOPT_CAINFO.html)  path  
-[SSLCERT](https://curl.haxx.se/libcurl/c/CURLOPT_SSLCERT.html)  path
+[SSLCERT](https://curl.haxx.se/libcurl/c/CURLOPT_SSLCERT.html)  path  
 [SSLKEY](https://curl.haxx.se/libcurl/c/CURLOPT_SSLKEY.html)  path  
 [SSLCERTTYPE](https://curl.haxx.se/libcurl/c/CURLOPT_SSLCERTTYPE.html)  string  
 [SSLKEYTYPE](https://curl.haxx.se/libcurl/c/CURLOPT_SSLKEYTYPE.html)  string  
