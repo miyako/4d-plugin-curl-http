@@ -17,3 +17,32 @@ For generic ``libcurl`` implementation, see [4d-plugin-curl](https://github.com/
 
 This is an FTP specific ``libcurl`` implementation see [4d-plugin-curl-ftp](https://github.com/miyako/4d-plugin-curl-ftp)
 
+## Syntax
+
+```
+error:=cURL_HTTP_Request(options;request;response{;callbackMethod})
+```
+
+Parameter|Type|Description
+------------|------------|----
+options|TEXT|``JSON``
+request|BLOB|
+response|BLOB|
+callbackMethod|TEXT|optional
+error|LONGINT|[Error code](https://curl.haxx.se/libcurl/c/libcurl-errors.html)
+
+---
+
+Signature of ``callbackMethod``
+
+```
+abort:=method(curlInfo;userInfo)
+```
+
+Parameter|Type|Description
+------------|------------|----
+curlInfo|TEXT|``JSON`` (``curl_easy_getinfo``)
+userInfo|TEXT|the text passed as the ``PRIVATE`` property of ``option``
+abort|BOOLEAN|
+
+[``CURLcode``](https://curl.haxx.se/libcurl/c/libcurl-errors.html) is returned in ``error``. when ``True`` is returned from the callback method, ``CURLE_ABORTED_BY_CALLBACK (42)`` is returned. same if the process has been aborted via the runtime explorer. aborting the debugger will not kill the process immediately.
