@@ -72,7 +72,7 @@ abort|BOOLEAN|
 [UNRESTRICTED_AUTH](https://curl.haxx.se/libcurl/c/CURLOPT_UNRESTRICTED_AUTH.html)  number  
 [REFERER](https://curl.haxx.se/libcurl/c/CURLOPT_REFERER.html)  string  
 [USERAGENT](https://curl.haxx.se/libcurl/c/CURLOPT_USERAGENT.html)  string  
-[HTTP200ALIASES](https://curl.haxx.se/libcurl/c/CURLOPT_HTTP200ALIASES.html)  value] ``["ICY 200 OK", "WEIRDO 99 FINE"...]``  
+[HTTP200ALIASES](https://curl.haxx.se/libcurl/c/CURLOPT_HTTP200ALIASES.html)  value: ``["ICY 200 OK", "WEIRDO 99 FINE"...]``  
 [COOKIE](https://curl.haxx.se/libcurl/c/CURLOPT_COOKIE.html)  string  
 [COOKIEFILE](https://curl.haxx.se/libcurl/c/CURLOPT_COOKIEFILE.html)  path  
 [COOKIEJAR](https://curl.haxx.se/libcurl/c/CURLOPT_COOKIEJAR.html)  path  
@@ -84,7 +84,7 @@ abort|BOOLEAN|
 [TRANSFER_ENCODING](https://curl.haxx.se/libcurl/c/CURLOPT_TRANSFER_ENCODING.html)  number  
 [TRANSFER_DECODING](https://curl.haxx.se/libcurl/c/CURLOPT_HTTP_TRANSFER_DECODING.html)  number  
 [RANGE](https://curl.haxx.se/libcurl/c/CURLOPT_RANGE.html)  string  
-[RESUME_FROM](https://curl.haxx.se/libcurl/c/CURLOPT_RESUME_FROM.html)  number
+[RESUME_FROM](https://curl.haxx.se/libcurl/c/CURLOPT_RESUME_FROM.html)  number  
 [RESUME_FROM_LARGE](https://curl.haxx.se/libcurl/c/CURLOPT_RESUME_FROM_LARGE.html)  string  
 [CUSTOMREQUEST](https://curl.haxx.se/libcurl/c/CURLOPT_CUSTOMREQUEST.html)  string  
 [HTTPAUTH](https://curl.haxx.se/libcurl/c/CURLOPT_HTTPAUTH.html)  values: ``ANY`` ``ANYSAFE`` ``BASIC`` ``DIGEST`` ``NEGOTIATE`` ``NTLM``  
