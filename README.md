@@ -82,7 +82,7 @@ Properties of ``options``
 [PROXY_SSL_VERIFYHOST](https://curl.haxx.se/libcurl/c/CURLOPT_PROXY_SSL_VERIFYHOST.html)  number  
 [PROXY_SSL_VERIFYPEER](https://curl.haxx.se/libcurl/c/CURLOPT_PROXY_SSL_VERIFYPEER.html)  number  
 [PROXY_KEYPASSWD](https://curl.haxx.se/libcurl/c/CURLOPT_PROXY_KEYPASSWD.html)  string  
-[PROXY_SSLVERSION](https://curl.haxx.se/libcurl/c/CURLOPT_PROXY_SSLVERSION.html)  string  
+[PROXY_SSLVERSION](https://curl.haxx.se/libcurl/c/CURLOPT_PROXY_SSLVERSION.html)  value: ``libcurl`` constant without the ``CURL_`` prefix    
 
 **About proxies**  
 
@@ -111,6 +111,6 @@ a special option named ``AUTOPROXY`` can be used to let ``libproxy`` find the pr
 [SSL_ENABLE_ALPN](https://curl.haxx.se/libcurl/c/CURLOPT_SSL_ENABLE_ALPN.html)  number  
 [SSL_ENABLE_NPN](https://curl.haxx.se/libcurl/c/CURLOPT_SSL_ENABLE_NPN.html)  number  
 [SSL_FALSESTART](https://curl.haxx.se/libcurl/c/CURLOPT_SSL_FALSESTART.html)  number  
-[SSLVERSION](https://curl.haxx.se/libcurl/c/CURLOPT_SSLVERSION.html)  string  
+[SSLVERSION](https://curl.haxx.se/libcurl/c/CURLOPT_SSLVERSION.html)  value: ``libcurl`` constant without the ``CURL_`` prefix  
 [VERIFYSTATUS](https://curl.haxx.se/libcurl/c/CURLOPT_SSL_VERIFYSTATUS.html)  number  
 [KEYPASSWD](https://curl.haxx.se/libcurl/c/CURLOPT_KEYPASSWD.html)  string  
