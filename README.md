@@ -13,7 +13,7 @@ HTTP client based on libcurl-7.57.0
 
 This is an HTTP specific ``libcurl`` implementation 
 
-For generic ``libcurl`` implementation, see [https://github.com/miyako/4d-plugin-curl]
+For generic ``libcurl`` implementation, see [4d-plugin-curl](https://github.com/miyako/4d-plugin-curl)
 
-This is an FTP specific ``libcurl`` implementation see [https://github.com/miyako/4d-plugin-curl-ftp]
+This is an FTP specific ``libcurl`` implementation see [4d-plugin-curl-ftp](https://github.com/miyako/4d-plugin-curl-ftp)
 
