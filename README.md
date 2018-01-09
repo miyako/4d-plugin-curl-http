@@ -49,7 +49,7 @@ abort|BOOLEAN|
 
 ---
 
-**Properties of ``options``**
+**Options**
 
 * General
 
