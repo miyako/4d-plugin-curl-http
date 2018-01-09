@@ -79,6 +79,10 @@ Properties of ``options``
 [PROXY_PINNEDPUBLICKEY](https://curl.haxx.se/libcurl/c/CURLOPT_PROXY_PINNEDPUBLICKEY.html)  path  
 [PROXY_CAINFO](https://curl.haxx.se/libcurl/c/CURLOPT_PROXY_CAINFO.html)  path  
 [PROXY_CRLFILE](https://curl.haxx.se/libcurl/c/CURLOPT_PROXY_CRLFILE.html)  path  
+[PROXY_SSL_VERIFYHOST](https://curl.haxx.se/libcurl/c/CURLOPT_PROXY_SSL_VERIFYHOST.html)  number  
+[PROXY_SSL_VERIFYPEER](https://curl.haxx.se/libcurl/c/CURLOPT_PROXY_SSL_VERIFYPEER.html)  number  
+[PROXY_KEYPASSWD](https://curl.haxx.se/libcurl/c/CURLOPT_PROXY_KEYPASSWD.html)  string  
+[PROXY_SSLVERSION](https://curl.haxx.se/libcurl/c/CURLOPT_PROXY_SSLVERSION.html)  string  
 
 **About proxies**  
 
@@ -104,3 +108,9 @@ a special option named ``AUTOPROXY`` can be used to let ``libproxy`` find the pr
 [PINNEDPUBLICKEY](https://curl.haxx.se/libcurl/c/CURLOPT_PINNEDPUBLICKEY.html)  path  
 [ISSUERCERT](https://curl.haxx.se/libcurl/c/CURLOPT_ISSUERCERT.html)  path  
 [CRLFILE](https://curl.haxx.se/libcurl/c/CURLOPT_CRLFILE.html)  path  
+[SSL_ENABLE_ALPN](https://curl.haxx.se/libcurl/c/CURLOPT_SSL_ENABLE_ALPN.html)  number  
+[SSL_ENABLE_NPN](https://curl.haxx.se/libcurl/c/CURLOPT_SSL_ENABLE_NPN.html)  number  
+[SSL_FALSESTART](https://curl.haxx.se/libcurl/c/CURLOPT_SSL_FALSESTART.html)  number  
+[SSLVERSION](https://curl.haxx.se/libcurl/c/CURLOPT_SSLVERSION.html)  string  
+[VERIFYSTATUS](https://curl.haxx.se/libcurl/c/CURLOPT_SSL_VERIFYSTATUS.html)  number  
+[KEYPASSWD](https://curl.haxx.se/libcurl/c/CURLOPT_KEYPASSWD.html)  string  
