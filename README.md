@@ -59,9 +59,27 @@ Properties of ``options``
 [PROXYTYPE](https://curl.haxx.se/libcurl/c/CURLOPT_PROXYTYPE.html)  string  
 [PROXYUSERPWD](https://curl.haxx.se/libcurl/c/CURLOPT_PROXYUSERPWD.html)  string  
 [PROXY_SERVICE_NAME](https://curl.haxx.se/libcurl/c/CURLOPT_PROXY_SERVICE_NAME.html)  string  
+[PROXY_SSLCERT](https://curl.haxx.se/libcurl/c/CURLOPT_PROXY_SSLCERT.html)  path  
+[PROXY_SSLKEY](https://curl.haxx.se/libcurl/c/CURLOPT_PROXY_SSLKEY.html)  path  
+[PROXY_SSLCERTTYPE](https://curl.haxx.se/libcurl/c/CURLOPT_PROXY_SSLCERTTYPE.html)  string  
+[PROXY_SSLKEYTYPE](https://curl.haxx.se/libcurl/c/CURLOPT_PROXY_SSLKEYTYPE.html)  string  
 
 **About proxies**  
 
 ``libcurl`` respects proxy environment variables named ``http_proxy``, ``all_proxy``, ``no_proxy`` etc. options take precedence over environment variables. 
 
 a special option named ``AUTOPROXY`` can be used to let ``libproxy`` find the proxy via WPAD and PAC.
+
+* TLS
+
+[USE_SSL](https://curl.haxx.se/libcurl/c/CURLOPT_USE_SSL.html)  string
+
+values: ``USESSL_NONE`` ``USESSL_TRY`` ``USESSL_CONTROL`` ``USESSL_ALL``  
+
+[SSL_VERIFYHOST](https://curl.haxx.se/libcurl/c/CURLOPT_SSL_VERIFYHOST.html)  number    
+[SSL_VERIFYPEER](https://curl.haxx.se/libcurl/c/CURLOPT_SSL_VERIFYPEER.html)  number  
+[CAINFO](https://curl.haxx.se/libcurl/c/CURLOPT_CAINFO.html)  path  
+[SSLCERT](https://curl.haxx.se/libcurl/c/CURLOPT_SSLCERT.html)  path
+[SSLKEY](https://curl.haxx.se/libcurl/c/CURLOPT_SSLKEY.html)  path  
+[SSLCERTTYPE](https://curl.haxx.se/libcurl/c/CURLOPT_SSLCERTTYPE.html)  string  
+[SSLKEYTYPE](https://curl.haxx.se/libcurl/c/CURLOPT_SSLKEYTYPE.html)  string  
