@@ -72,10 +72,7 @@ a special option named ``AUTOPROXY`` can be used to let ``libproxy`` find the pr
 
 * TLS
 
-[USE_SSL](https://curl.haxx.se/libcurl/c/CURLOPT_USE_SSL.html)  string
-
-values: ``USESSL_NONE`` ``USESSL_TRY`` ``USESSL_CONTROL`` ``USESSL_ALL``  
-
+[USE_SSL](https://curl.haxx.se/libcurl/c/CURLOPT_USE_SSL.html)  values: ``USESSL_NONE`` ``USESSL_TRY`` ``USESSL_CONTROL`` ``USESSL_ALL``  
 [SSL_VERIFYHOST](https://curl.haxx.se/libcurl/c/CURLOPT_SSL_VERIFYHOST.html)  number    
 [SSL_VERIFYPEER](https://curl.haxx.se/libcurl/c/CURLOPT_SSL_VERIFYPEER.html)  number  
 [CAINFO](https://curl.haxx.se/libcurl/c/CURLOPT_CAINFO.html)  path  
