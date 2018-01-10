@@ -17,6 +17,16 @@ For generic ``libcurl`` implementation, see [4d-plugin-curl](https://github.com/
 
 This is an FTP specific ``libcurl`` implementation see [4d-plugin-curl-ftp](https://github.com/miyako/4d-plugin-curl-ftp)
 
+### Points of interest
+
+* file or blob for input and output. see option ``REQUEST`` and ``RESPONSE``
+
+* automatic proxy discovery by [``libproxy``](https://github.com/libproxy/libproxy). see option ``AUTOPROXY``
+
+* callback method to monitor progress or abort if necessary
+
+* reduced CPU consumption
+
 ## Syntax
 
 ```
@@ -45,7 +55,7 @@ curlInfo|TEXT|``JSON`` (``curl_easy_getinfo``)
 userInfo|TEXT|the text passed as the ``PRIVATE`` property of ``option``
 abort|BOOLEAN|
 
-[``CURLcode``](https://curl.haxx.se/libcurl/c/libcurl-errors.html) is returned in ``error``. when ``True`` is returned from the callback method, ``CURLE_ABORTED_BY_CALLBACK (42)`` is returned. same if the process has been aborted via the runtime explorer. aborting the debugger will not kill the process immediately.
+[``CURLcode``](https://curl.haxx.se/libcurl/c/libcurl-errors.html) is returned in ``error``. when ``True`` is returned from the callback method, ``CURLE_ABORTED_BY_CALLBACK (42)`` is returned. Same if the process has been aborted via the runtime explorer. aborting the debugger will not kill the process immediately.
 
 ---
 
@@ -163,3 +173,45 @@ a special option named ``AUTOPROXY`` can be used to let ``libproxy`` find the pr
 [SSLVERSION](https://curl.haxx.se/libcurl/c/CURLOPT_SSLVERSION.html)  value: ``SSLv2`` ``SSLv3`` ``TLSv1.0`` ``TLSv1.1`` ``TLSv1.2`` ``TLSv1.3``  
 [VERIFYSTATUS](https://curl.haxx.se/libcurl/c/CURLOPT_SSL_VERIFYSTATUS.html)  number  
 [KEYPASSWD](https://curl.haxx.se/libcurl/c/CURLOPT_KEYPASSWD.html)  string  
+
+## Examples
+
+* input and output with file
+
+```
+C_OBJECT($options)
+
+OB SET($options;\
+"URL";"http://192.168.0.1/api";\
+"UPLOAD";1;\
+"RESPONSE";Get 4D folder(Current resources folder)+"http.txt";\
+"REQUEST";Get 4D folder(Current resources folder)+"image.jpg")
+
+C_BLOB($request;$response)
+$callback:=""
+
+$error:=cURL_HTTP_Request (JSON Stringify($options);$request;$response;$callback)
+```
+
+* automatic proxy discovery
+
+```
+C_OBJECT($options)
+
+OB SET($options;\
+"URL";"http://localhost/x";\
+"AUTOPROXY";1)
+
+ARRAY TEXT($headers;1)
+$headers{1}:="foo:bar"
+OB SET ARRAY($options;"HTTPHEADER";$headers)
+
+ARRAY TEXT($proxy_headers;1)
+$proxy_headers{1}:="foo2:bar2"
+OB SET ARRAY($options;"PROXYHEADER";$proxy_headers)
+
+C_BLOB($request;$response)
+$callback:=""
+
+$error:=cURL_HTTP_Request (JSON Stringify($options);$request;$response;$callback)
+```
