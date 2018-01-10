@@ -15,7 +15,7 @@ This is an HTTP specific ``libcurl`` implementation
 
 For generic ``libcurl`` implementation, see [4d-plugin-curl](https://github.com/miyako/4d-plugin-curl)
 
-This is an FTP specific ``libcurl`` implementation see [4d-plugin-curl-ftp](https://github.com/miyako/4d-plugin-curl-ftp)
+For FTP specific ``libcurl`` implementation, see [4d-plugin-curl-ftp](https://github.com/miyako/4d-plugin-curl-ftp)
 
 ### Points of interest
 
