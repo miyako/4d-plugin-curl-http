@@ -101,7 +101,7 @@ abort|BOOLEAN|
 
 **About HTTP**
 
-a special option named ``REQUEST`` and ``RESPONSE`` can be used to specify a file as input an output.
+a special option named ``REQUEST`` and ``RESPONSE`` can be used to specify files as input and output.
 
 * Limits
 
