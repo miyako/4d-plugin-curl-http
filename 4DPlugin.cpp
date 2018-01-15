@@ -12,6 +12,7 @@
 #include "4DPlugin.h"
 
 pxProxyFactory *pf = NULL;
+CURLM *gmcurl = NULL;
 
 bool IsProcessOnExit()
 {
@@ -26,6 +27,9 @@ bool IsProcessOnExit()
 void OnStartup()
 {
 	curl_global_init(CURL_GLOBAL_DEFAULT);
+	
+	gmcurl = curl_multi_init();
+	
 	pf = px_proxy_factory_new();
 }
 
@@ -33,6 +37,12 @@ void OnCloseProcess()
 {
 	if(IsProcessOnExit())
 	{
+		if(gmcurl)
+		{
+			curl_multi_cleanup(gmcurl);
+			gmcurl = NULL;
+		}
+		
 		curl_global_cleanup();
 		if(pf)
 		{
@@ -85,29 +95,30 @@ void CommandDispatcher (PA_long32 pProcNum, sLONG_PTR *pResult, PackagePtr pPara
 
 #pragma mark -
 
-CURLcode curl_perform(CURLM *mcurl, CURL *curl, C_TEXT& Param3, C_TEXT& userInfo)
+CURLcode curl_perform(CURL *curl, C_TEXT& Param4, C_TEXT& userInfo)
 {
+	/* callback argument or return value if method name is empty */
+	CUTF16String info;
+	CURLcode result = CURLE_OK;
+	
+	result = curl_easy_perform(curl);
+	
+	curl_get_info(curl, info);
+	Param4.setUTF16String(&info);
+
+	return result;
+}
+
+CURLcode curl_perform(CURLM *mcurl, CURL *curl, C_TEXT& Param4, C_TEXT& userInfo)
+{
+	/* callback argument or return value if method name is empty */
+	CUTF16String info;
 	CURLMcode mc = CURLM_OK; /* not used to abort */
 	CURLcode result = CURLE_OK;
 	
-	curl_multi_add_handle(mcurl, curl);
-	int running_handles = 0;
-	
-	long curl_timeout = 1000;
-	curl_multi_timeout(mcurl, &curl_timeout);
-	curl_timeout = (curl_timeout > 0) ? curl_timeout : 1000;
-	curl_timeout = (curl_timeout > 1000) ? 1000 : curl_timeout;
-	timeval tv;
-	tv.tv_sec = curl_timeout / 1000;
-	tv.tv_usec = (curl_timeout % 1000) * 1000;
-	
-	fd_set fdread;
-	fd_set fdwrite;
-	fd_set fdexcep;
-	
+	/* prepare for callback */
 	PA_Variable	params[4];
-	
-	PA_long32 method_id = PA_GetMethodID((PA_Unichar *)Param3.getUTF16StringPtr());
+	PA_long32 method_id = PA_GetMethodID((PA_Unichar *)Param4.getUTF16StringPtr());
 	
 	if(method_id)
 	{
@@ -124,29 +135,61 @@ CURLcode curl_perform(CURLM *mcurl, CURL *curl, C_TEXT& Param3, C_TEXT& userInfo
 		params[2] = PA_CreateVariable(eVK_Unistring);
 		params[3] = PA_CreateVariable(eVK_Unistring);
 		PA_SetUnistring((&(params[0].uValue.fString)),
-										(PA_Unichar *)Param3.getUTF16StringPtr());
+										(PA_Unichar *)Param4.getUTF16StringPtr());
 		PA_SetUnistring((&(params[3].uValue.fString)),
 										(PA_Unichar *)userInfo.getUTF16StringPtr());
 	}
+	int running_handles = 0;
+	curl_multi_add_handle(mcurl, curl);
+	curl_multi_perform(mcurl, &running_handles);
 	
 	do
 	{
+		PA_YieldAbsolute();
+		
+		struct timeval tv;
+		int rc = 0;
+		
+		fd_set fdread;
+		fd_set fdwrite;
+		fd_set fdexcep;
+		
+		int maxfd = -1;
+		long curl_timeout = -1;
 		
 		FD_ZERO(&fdread);
 		FD_ZERO(&fdwrite);
 		FD_ZERO(&fdexcep);
+
+		tv.tv_sec = 1;
+		tv.tv_usec = 0;
 		
-		int maxfd = -1;
+		curl_multi_timeout(mcurl, &curl_timeout);
+
+		if(curl_timeout >= 0)
+		{
+			tv.tv_sec = curl_timeout / 1000;
+			if(tv.tv_sec > 1)
+				tv.tv_sec = 1;
+			else
+				tv.tv_usec = (curl_timeout % 1000) * 1000;
+		}
+		
 		mc = curl_multi_fdset(mcurl, &fdread, &fdwrite, &fdexcep, &maxfd);
-		int rc = 0;
+		
+		if(mc != CURLM_OK)
+		{
+			break;
+		}
+
 		if(maxfd == -1)
 		{
-			PA_PutProcessToSleep(PA_GetCurrentProcessNumber(), 6);
+			/* https://curl.haxx.se/libcurl/c/multi-post.html */			
+			PA_PutProcessToSleep(PA_GetCurrentProcessNumber(), 6);//100ms
 			rc = 0;
 		}
 		else
 		{
-			PA_YieldAbsolute();
 			rc = select(maxfd+1, &fdread, &fdwrite, &fdexcep, &tv);
 		}
 		switch(rc) {
@@ -159,12 +202,10 @@ CURLcode curl_perform(CURLM *mcurl, CURL *curl, C_TEXT& Param3, C_TEXT& userInfo
 				mc = curl_multi_perform(mcurl, &running_handles);
 				/* callback method */
 			{
+				curl_get_info(curl, info);
 				
-				if(Param3.getUTF16Length())
+				if(Param4.getUTF16Length())
 				{
-					CUTF16String info;
-					curl_get_info(curl, info);
-					
 					if(method_id)
 					{
 						PA_SetUnistring((&(params[0].uValue.fString)),
@@ -194,6 +235,7 @@ CURLcode curl_perform(CURLM *mcurl, CURL *curl, C_TEXT& Param3, C_TEXT& userInfo
 							goto curl_abort_transfer;
 						}
 					}
+
 				}
 				
 				if(PA_IsProcessDying())
@@ -207,7 +249,7 @@ CURLcode curl_perform(CURLM *mcurl, CURL *curl, C_TEXT& Param3, C_TEXT& userInfo
 				break;
 		}
 		
-	}while((running_handles != 0));
+	}while((running_handles));
 	
 curl_abort_transfer:
 	
@@ -224,10 +266,19 @@ curl_abort_transfer:
 		result = m->data.result;
 	}
 	
+	if(!Param4.getUTF16Length())
+	{
+		curl_get_info(curl, info);
+		Param4.setUTF16String(&info);
+	}
+	
 	curl_multi_remove_handle(mcurl, curl);
 	
 	return result;
 }
+
+#pragma mark -
+
 size_t curl_read_function(void *buffer,
 													size_t size,
 													size_t nmemb,
@@ -303,7 +354,7 @@ void cURL_HTTP_Request(sLONG_PTR *pResult, PackagePtr pParams)
 	Param4.fromParamAtIndex(pParams, 4);
 	
 	CURL *curl = curl_easy_init();
-	CURLM *mcurl = curl_multi_init();
+	CURLM *mcurl = gmcurl;//curl_multi_init();
 	
 	struct curl_slist *http_headers = NULL;
 	struct curl_slist *http_proxy_headers = NULL;
@@ -313,12 +364,12 @@ void cURL_HTTP_Request(sLONG_PTR *pResult, PackagePtr pParams)
 	CPathString request_path;
 	CPathString response_path;
 	
-	curl_set_options(curl, Param1, userInfo,
-									 http_headers,
-									 http_proxy_headers,
-									 http_200_aliases,
-									 request_path,
-									 response_path);
+	BOOL isAtomic = curl_set_options(curl, Param1, userInfo,
+																	 http_headers,
+																	 http_proxy_headers,
+																	 http_200_aliases,
+																	 request_path,
+																	 response_path);
 	
 	http_ctx request_ctx;
 	request_ctx.pos = 0L;
@@ -360,7 +411,13 @@ void cURL_HTTP_Request(sLONG_PTR *pResult, PackagePtr pParams)
 	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, curl_write_function);
 	curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 1L);
 	
-	returnValue.setIntValue(curl_perform(mcurl, curl, Param4, userInfo));
+	if(isAtomic)
+	{
+		returnValue.setIntValue(curl_perform(curl, Param4, userInfo));
+	}else
+	{
+		returnValue.setIntValue(curl_perform(mcurl, curl, Param4, userInfo));
+	}
 	
 	if(http_headers)
 		curl_slist_free_all(http_headers);
@@ -372,19 +429,21 @@ void cURL_HTTP_Request(sLONG_PTR *pResult, PackagePtr pParams)
 		curl_slist_free_all(http_200_aliases);
 	
 	curl_easy_cleanup(curl);
-	curl_multi_cleanup(mcurl);
+//	curl_multi_cleanup(mcurl);
 	
 	Param3.toParamAtIndex(pParams, 3);
+	Param4.toParamAtIndex(pParams, 4);
 	returnValue.setReturn(pResult);
 }
 
-void curl_set_options(CURL *curl, C_TEXT& Param1, C_TEXT& userInfo,
+BOOL curl_set_options(CURL *curl, C_TEXT& Param1, C_TEXT& userInfo,
 											struct curl_slist *http_headers,
 											struct curl_slist *http_proxy_headers,
 											struct curl_slist *http_200_aliases,
 											CPathString& request_path,
 											CPathString& response_path)
 {
+	BOOL isAtomic = FALSE;
 	CUTF8String Param1_u8;
 	Param1.copyUTF8String(&Param1_u8);
 	
@@ -442,6 +501,9 @@ void curl_set_options(CURL *curl, C_TEXT& Param1, C_TEXT& userInfo,
 #endif
 							json_free(value);
 						}
+						break;
+					case CURLOPT_ATOMIC:
+						isAtomic = json_as_int(*i);
 						break;
 					case CURLOPT_RESPONSE:
 						value = json_as_string(*i);
@@ -634,7 +696,7 @@ void curl_set_options(CURL *curl, C_TEXT& Param1, C_TEXT& userInfo,
 		}
 		json_delete(option);
 	}
-	
+	return isAtomic;
 }
 
 #pragma mark JSON cURL
@@ -653,6 +715,10 @@ CURLoption json_get_curl_option_name(JSONNODE *n)
 		{
 			std::wstring s = std::wstring((const wchar_t *)name);
 			/* general */
+			if (s.compare(L"ATOMIC") == 0)
+			{
+				v = (CURLoption)CURLOPT_ATOMIC;goto json_get_curl_option_exit;
+			}
 			if (s.compare(L"VERBOSE") == 0)
 			{
 				v = CURLOPT_VERBOSE;goto json_get_curl_option_exit;

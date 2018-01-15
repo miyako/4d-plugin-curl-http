@@ -18,6 +18,7 @@
 #define CURLOPT_AUTOPROXY 8
 #define CURLOPT_REQUEST 30
 #define CURLOPT_RESPONSE 35
+#define CURLOPT_ATOMIC 73
 
 void json_wconv(const wchar_t *value, CUTF16String *u16);
 void json_wconv(const wchar_t *value, CUTF8String *u8);
@@ -86,7 +87,7 @@ void json_get_curl_option_p(CURL *curl, CURLoption option, JSONNODE *n);
 void json_get_curl_option_s(CURL *curl, CURLoption option, JSONNODE *n);
 long json_get_curl_option_value(JSONNODE *n);
 
-void curl_set_options(CURL *curl, C_TEXT& Param1, C_TEXT& userInfo,
+BOOL curl_set_options(CURL *curl, C_TEXT& Param1, C_TEXT& userInfo,
 											struct curl_slist *http_headers,
 											struct curl_slist *http_proxy_headers,
 											struct curl_slist *http_200_aliases,
