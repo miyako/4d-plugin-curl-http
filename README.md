@@ -29,6 +29,8 @@ For FTP specific ``libcurl`` implementation, see [4d-plugin-curl-ftp](https://gi
 
 ### Releases
 
+[1.1](https://github.com/miyako/4d-plugin-curl-http/releases/tag/1.1) performance improvement
+
 [1.0](https://github.com/miyako/4d-plugin-curl-http/releases/tag/1.0)
 
 ## Syntax
