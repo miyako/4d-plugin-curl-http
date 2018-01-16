@@ -341,6 +341,8 @@ size_t curl_write_function(void *buffer,
 	return len;
 }
 
+#pragma mark main
+
 void cURL_HTTP_Request(sLONG_PTR *pResult, PackagePtr pParams)
 {
 	C_TEXT Param1;
@@ -389,6 +391,7 @@ void cURL_HTTP_Request(sLONG_PTR *pResult, PackagePtr pParams)
 	response_ctx.path = (const wchar_t *)response_path.c_str();
 #endif
 	
+	curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE_LARGE, Param2.getBytesLength());
 	curl_easy_setopt(curl, CURLOPT_INFILESIZE_LARGE, Param2.getBytesLength());
 	FILE *f = CPathOpen (request_ctx.path, CPathRead);
 	if(f)
@@ -399,6 +402,7 @@ void cURL_HTTP_Request(sLONG_PTR *pResult, PackagePtr pParams)
 		
 		if(request_ctx.size != -1L)
 		{
+			curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE_LARGE, request_ctx.size);
 			curl_easy_setopt(curl, CURLOPT_INFILESIZE_LARGE, request_ctx.size);
 		}
 	}
@@ -645,6 +649,7 @@ BOOL curl_set_options(CURL *curl, C_TEXT& Param1, C_TEXT& userInfo,
 					case CURLOPT_DNS_CACHE_TIMEOUT:
 					case CURLOPT_EXPECT_100_TIMEOUT_MS:
 					case CURLOPT_UPLOAD:
+					case CURLOPT_POST:
 					case CURLOPT_NOBODY:
 					case CURLOPT_AUTOREFERER:
 					case CURLOPT_FOLLOWLOCATION:
@@ -982,6 +987,10 @@ CURLoption json_get_curl_option_name(JSONNODE *n)
 			if (s.compare(L"UPLOAD") == 0)
 			{
 				v = CURLOPT_UPLOAD;goto json_get_curl_option_exit;
+			}
+			if (s.compare(L"POST") == 0)
+			{
+				v = CURLOPT_POST;goto json_get_curl_option_exit;
 			}
 			if (s.compare(L"NOBODY") == 0)
 			{

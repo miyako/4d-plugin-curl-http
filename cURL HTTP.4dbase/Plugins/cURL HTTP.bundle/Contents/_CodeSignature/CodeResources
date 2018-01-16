@@ -100,7 +100,7 @@
 		<dict>
 			<key>hash</key>
 			<data>
-			kII+e8LMmw2kQnQ556uxNXcBzbA=
+			wailXilhOPIjBhNrQOS4xW5Xk3k=
 			</data>
 			<key>optional</key>
 			<true/>
@@ -380,11 +380,11 @@
 		<dict>
 			<key>hash</key>
 			<data>
-			kII+e8LMmw2kQnQ556uxNXcBzbA=
+			wailXilhOPIjBhNrQOS4xW5Xk3k=
 			</data>
 			<key>hash2</key>
 			<data>
-			pYsqNBt55u5hhQU7RTuI6r2nHMrCYFfretTFSkBVr0s=
+			MMqujNkNFt2U42N/2oGJfR2wh3NXRtAFG/NdIkGl4i0=
 			</data>
 			<key>optional</key>
 			<true/>
@@ -411,6 +411,17 @@
 			YybfKU3EUhEemwnM+OtkaAB91/1TykehMZHbmBLJkew=
 			</data>
 		</dict>
+		<key>Windows/vcruntime140.dll</key>
+		<dict>
+			<key>hash</key>
+			<data>
+			qDpOxwF20NwKx03mv6KIkMGPHSU=
+			</data>
+			<key>hash2</key>
+			<data>
+			LbJKllnn90/lxa10K72DUMj1vkYPmt8cn6EeDztFcb4=
+			</data>
+		</dict>
 		<key>Windows64/cURL HTTP.4DX</key>
 		<dict>
 			<key>hash</key>
@@ -420,6 +431,17 @@
 			<key>hash2</key>
 			<data>
 			V1IQO6U0JfJUNLxmvS2vYqJCHOQPe6Ew3cKLIbAYNhs=
+			</data>
+		</dict>
+		<key>Windows64/vcruntime140.dll</key>
+		<dict>
+			<key>hash</key>
+			<data>
+			RPwfL/P6ciT52XBdcgtg819m1E8=
+			</data>
+			<key>hash2</key>
+			<data>
+			OTedDDGKoZ+/s6xN6UqEYAIYzvrjPCu0QSf5lLOQv5A=
 			</data>
 		</dict>
 		<key>manifest.json</key>
