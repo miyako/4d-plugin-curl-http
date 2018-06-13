@@ -29,7 +29,7 @@ For FTP specific ``libcurl`` implementation, see [4d-plugin-curl-ftp](https://gi
 
 ### Releases
 
-[2.0](https://github.com/miyako/4d-plugin-curl-http/releases/tag/2.0) added option [POST](https://curl.haxx.se/libcurl/c/CURLOPT_POST.html) 
+[2.1](https://github.com/miyako/4d-plugin-curl-http/releases/tag/2.1) added option [POST](https://curl.haxx.se/libcurl/c/CURLOPT_POST.html) 
 
 [1.1](https://github.com/miyako/4d-plugin-curl-http/releases/tag/1.1.0) performance improvement; return ``curlInfo`` if empty string is passed to ``callbackMethod``
 
