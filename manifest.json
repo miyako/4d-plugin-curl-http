@@ -1,1 +1,11 @@
-﻿{"name":"cURL HTTP","id":20000,"commands":[{"theme":"HTTP","syntax":"cURL_HTTP_Request(&T;&O;&O;&T):L"}]}
+﻿{
+	"name": "cURL HTTP",
+	"id": 20000,
+	"commands": [
+							 {
+							 "theme": "HTTP",
+							 "syntax": "cURL_HTTP_Request(&T;&O;&O;&T):L",
+							 "threadSafe": false
+							 }
+							 ]
+}

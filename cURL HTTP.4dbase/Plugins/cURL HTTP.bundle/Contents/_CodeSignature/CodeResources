@@ -100,7 +100,7 @@
 		<dict>
 			<key>hash</key>
 			<data>
-			wailXilhOPIjBhNrQOS4xW5Xk3k=
+			BR2+xKqmpIm9sCrM9UMpcYxWQ18=
 			</data>
 			<key>optional</key>
 			<true/>
@@ -380,11 +380,11 @@
 		<dict>
 			<key>hash</key>
 			<data>
-			wailXilhOPIjBhNrQOS4xW5Xk3k=
+			BR2+xKqmpIm9sCrM9UMpcYxWQ18=
 			</data>
 			<key>hash2</key>
 			<data>
-			MMqujNkNFt2U42N/2oGJfR2wh3NXRtAFG/NdIkGl4i0=
+			ae2frNOxJG9NwGQ/e+NmVMhOGER3pFrGZdATF5IglIw=
 			</data>
 			<key>optional</key>
 			<true/>
@@ -404,11 +404,11 @@
 		<dict>
 			<key>hash</key>
 			<data>
-			HiPv77GTrTIesr4taiLe0QgtVtE=
+			QySpb1VtPqtp0NU0vYoexl/lYPA=
 			</data>
 			<key>hash2</key>
 			<data>
-			YybfKU3EUhEemwnM+OtkaAB91/1TykehMZHbmBLJkew=
+			Jx4aDq4UA4iloN9ncnZbcrGnhgu5fRGBlUc7SwKwACI=
 			</data>
 		</dict>
 		<key>Windows/vcruntime140.dll</key>
@@ -426,11 +426,11 @@
 		<dict>
 			<key>hash</key>
 			<data>
-			GifXMIywObqAtgRnOFh/sFsxFGk=
+			T+ZILRopx5dFWyfSs6Isf/deMCc=
 			</data>
 			<key>hash2</key>
 			<data>
-			V1IQO6U0JfJUNLxmvS2vYqJCHOQPe6Ew3cKLIbAYNhs=
+			ALfjf0zFDHFE9gMi3Ggm/nzWEnVxJnopKD4XdIgZ+5Q=
 			</data>
 		</dict>
 		<key>Windows64/vcruntime140.dll</key>
@@ -448,7 +448,7 @@
 		<dict>
 			<key>cdhash</key>
 			<data>
-			6qiKTtf1U9d6D5jv7s3qL3h08Qw=
+			JW/lmA8UdEnW5Loyczi75N3n08M=
 			</data>
 			<key>requirement</key>
 			<string>identifier manifest and anchor apple generic and certificate 1[field.1.2.840.113635.100.6.2.6] /* exists */ and certificate leaf[field.1.2.840.113635.100.6.1.13] /* exists */ and certificate leaf[subject.OU] = Y69CWUC25B</string>

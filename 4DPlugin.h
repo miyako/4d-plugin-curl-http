@@ -97,10 +97,14 @@ BOOL curl_set_options(CURL *curl, C_TEXT& Param1, C_TEXT& userInfo,
 void curl_get_info(CURL *curl, CUTF16String& json);
 
 /*
-void last_path_component(CUTF8String& path);
-void remove_trailing_separator(CUTF8String& path);
-void remove_trailing_separator(CUTF16String& path);
-void curl_unescape_path(CURL *curl, CUTF8String& path);
+ 
+ thread-undafe entry points
+ 
+ PA_IsProcessDying
+ PA_GetMethodID
+ PA_GetCurrentProcessNumber
+ PA_GetProcessInfo
+ 
  */
 
 // --- HTTP
