@@ -13,7 +13,7 @@ HTTP client based on libcurl-7.57.0
 
 **Attention**: Starting with v17, __you must not omit a BLOB parameter in compiled mode (cooperative or preemptive)__.
 
-Not ``threadSafe`` because of ~~``PA_IsProcessDying``~~ ``PA_GetMethodID`` ~~``PA_GetCurrentProcessNumber``~~ ~~``PA_GetProcessInfo``~~ ~~``PA_YieldAbsolute``~~
+Not ``threadSafe`` because of ~~``PA_IsProcessDying``~~ ``PA_GetMethodID`` ~~``PA_GetCurrentProcessNumber``~~ ~~``PA_GetProcessInfo``~~ ~~``PA_YieldAbsolute``~~ ~~``PA_PutProcessToSleep``~~
 
 This is an HTTP specific ``libcurl`` implementation 
 
