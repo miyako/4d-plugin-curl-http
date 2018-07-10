@@ -29,6 +29,8 @@ For FTP specific ``libcurl`` implementation, see [4d-plugin-curl-ftp](https://gi
 
 * reduced CPU consumption
 
+**Attention**: Starting with v17, __you must not omit a BLOB paramter in compiled mode (cooperative or preemptive)__.
+
 ### Releases
 
 [2.1](https://github.com/miyako/4d-plugin-curl-http/releases/tag/2.1) added option [POST](https://curl.haxx.se/libcurl/c/CURLOPT_POST.html) 
@@ -40,7 +42,7 @@ For FTP specific ``libcurl`` implementation, see [4d-plugin-curl-ftp](https://gi
 ## Syntax
 
 ```
-error:=cURL_HTTP_Request(options;request;response{;callbackMethod})
+error:=cURL_HTTP_Request(options;request;response{;callbackMethod{;responseHeader}})
 ```
 
 Parameter|Type|Description
@@ -49,6 +51,7 @@ options|TEXT|``JSON``
 request|BLOB|
 response|BLOB|
 callbackMethod|TEXT|optional
+responseHeader|BLOB|optional
 error|LONGINT|[Error code](https://curl.haxx.se/libcurl/c/libcurl-errors.html)
 
 ---
