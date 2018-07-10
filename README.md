@@ -33,6 +33,11 @@ For FTP specific ``libcurl`` implementation, see [4d-plugin-curl-ftp](https://gi
 
 ### Releases
 
+[3.0](https://github.com/miyako/4d-plugin-curl-http/releases/tag/3.0) added ``responseHeader`` __compatibility break__ thread-safe
+
+![preemption xx](https://user-images.githubusercontent.com/1725068/41327179-4e839948-6efd-11e8-982b-a670d511e04f.png)
+
+
 [2.1](https://github.com/miyako/4d-plugin-curl-http/releases/tag/2.1) added option [POST](https://curl.haxx.se/libcurl/c/CURLOPT_POST.html) 
 
 [1.1](https://github.com/miyako/4d-plugin-curl-http/releases/tag/1.1.0) performance improvement; return ``curlInfo`` if empty string is passed to ``callbackMethod``
