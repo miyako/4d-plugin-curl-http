@@ -11,7 +11,11 @@ HTTP client based on libcurl-7.57.0
 
 <img src="https://cloud.githubusercontent.com/assets/1725068/18940649/21945000-8645-11e6-86ed-4a0f800e5a73.png" width="32" height="32" /> <img src="https://cloud.githubusercontent.com/assets/1725068/18940648/2192ddba-8645-11e6-864d-6d5692d55717.png" width="32" height="32" /> <img src="https://user-images.githubusercontent.com/1725068/41266195-ddf767b2-6e30-11e8-9d6b-2adf6a9f57a5.png" width="32" height="32" />
 
-Not ``threadSafe`` because of ``PA_IsProcessDying`` ``PA_GetMethodID`` ``PA_GetCurrentProcessNumber`` ``PA_GetProcessInfo``
+**Attention**: Starting with v17, __you must not omit a BLOB parameter in compiled mode (cooperative or preemptive)__.
+
+``3.0`` thread-safe
+
+``2.1`` Not ``threadSafe`` because of ~~``PA_IsProcessDying``~~ ~~``PA_GetMethodID``~~ ~~``PA_GetCurrentProcessNumber``~~ ~~``PA_GetProcessInfo``~~ ~~``PA_YieldAbsolute``~~ ~~``PA_PutProcessToSleep``~~
 
 This is an HTTP specific ``libcurl`` implementation 
 
@@ -31,6 +35,11 @@ For FTP specific ``libcurl`` implementation, see [4d-plugin-curl-ftp](https://gi
 
 ### Releases
 
+[3.0](https://github.com/miyako/4d-plugin-curl-http/releases/tag/3.0) added ``responseHeader`` __compatibility break__ thread-safe
+
+![preemption xx](https://user-images.githubusercontent.com/1725068/41327179-4e839948-6efd-11e8-982b-a670d511e04f.png)
+
+
 [2.1](https://github.com/miyako/4d-plugin-curl-http/releases/tag/2.1) added option [POST](https://curl.haxx.se/libcurl/c/CURLOPT_POST.html) 
 
 [1.1](https://github.com/miyako/4d-plugin-curl-http/releases/tag/1.1.0) performance improvement; return ``curlInfo`` if empty string is passed to ``callbackMethod``
@@ -40,7 +49,7 @@ For FTP specific ``libcurl`` implementation, see [4d-plugin-curl-ftp](https://gi
 ## Syntax
 
 ```
-error:=cURL_HTTP_Request(options;request;response{;callbackMethod})
+error:=cURL_HTTP_Request(options;request;response{;callbackMethod{;responseHeader}})
 ```
 
 Parameter|Type|Description
@@ -49,6 +58,7 @@ options|TEXT|``JSON``
 request|BLOB|
 response|BLOB|
 callbackMethod|TEXT|optional
+responseHeader|BLOB|optional
 error|LONGINT|[Error code](https://curl.haxx.se/libcurl/c/libcurl-errors.html)
 
 ---
