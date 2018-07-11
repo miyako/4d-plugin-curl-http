@@ -11,9 +11,13 @@
 #include <stdio.h>
 #include <time.h>
 
+#include <mutex>
+
 #include "curl.h"
 #include "libjson.h"
 #include "proxy.h"
+
+#include "preemptive_methods.h"
 
 #define CURLOPT_AUTOPROXY 8
 #define CURLOPT_REQUEST 30

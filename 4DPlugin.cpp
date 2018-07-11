@@ -11,9 +11,14 @@
 #include "4DPluginAPI.h"
 #include "4DPlugin.h"
 
+std::mutex mutexPf;
+std::mutex mutexMcurl;
+std::mutex mutexJson;
+
 pxProxyFactory *pf = NULL;
 CURLM *gmcurl = NULL;
 
+/*
 bool IsProcessOnExit()
 {
 	C_TEXT name;
@@ -23,34 +28,58 @@ bool IsProcessOnExit()
 	CUTF16String exitProcName((PA_Unichar *)"$\0x\0x\0\0\0");
 	return (!procName.compare(exitProcName));
 }
+*/
 
 void OnStartup()
 {
 	curl_global_init(CURL_GLOBAL_DEFAULT);
+
+    if(1)
+    {
+        std::lock_guard<std::mutex> lock(mutexMcurl);
+        
+        gmcurl = curl_multi_init();
+    }
+
+    if(1)
+    {
+        std::lock_guard<std::mutex> lock(mutexPf);
+        
+        pf = px_proxy_factory_new();
+    }
 	
-	gmcurl = curl_multi_init();
-	
-	pf = px_proxy_factory_new();
 }
 
+void OnExit()
+{
+    if(gmcurl)
+    {
+        std::lock_guard<std::mutex> lock(mutexMcurl);
+        
+        curl_multi_cleanup(gmcurl);
+        gmcurl = NULL;
+    }
+    
+    curl_global_cleanup();
+    
+    if(pf)
+    {
+        std::lock_guard<std::mutex> lock(mutexPf);
+        
+        px_proxy_factory_free(pf);
+        pf = NULL;
+    }
+}
+
+/*
 void OnCloseProcess()
 {
 	if(IsProcessOnExit())
 	{
-		if(gmcurl)
-		{
-			curl_multi_cleanup(gmcurl);
-			gmcurl = NULL;
-		}
-		
-		curl_global_cleanup();
-		if(pf)
-		{
-			px_proxy_factory_free(pf);
-			pf = NULL;
-		}
+        OnExit();
 	}
 }
+*/
 
 #pragma mark -
 
@@ -78,10 +107,16 @@ void CommandDispatcher (PA_long32 pProcNum, sLONG_PTR *pResult, PackagePtr pPara
 		case kServerInitPlugin :
 			OnStartup();
 			break;
-			
+
+        case kDeinitPlugin :
+            OnExit();
+        break;
+        
+        /*
 		case kCloseProcess :
 			OnCloseProcess();
 			break;
+         */
 			// --- HTTP
 
 		case 1 :
@@ -101,6 +136,8 @@ CURLcode curl_perform(CURL *curl, C_TEXT& Param4, C_TEXT& userInfo)
 	CUTF16String info;
 	CURLcode result = CURLE_OK;
 	
+    std::lock_guard<std::mutex> lock(mutexMcurl);
+    
 	result = curl_easy_perform(curl);
 	
 	curl_get_info(curl, info);
@@ -116,9 +153,11 @@ CURLcode curl_perform(CURLM *mcurl, CURL *curl, C_TEXT& Param4, C_TEXT& userInfo
 	CURLMcode mc = CURLM_OK; /* not used to abort */
 	CURLcode result = CURLE_OK;
 	
+    PA_long32 currentProcessNumber = PA_GetCurrentProcessNumber2();
+    
 	/* prepare for callback */
 	PA_Variable	params[4];
-	PA_long32 method_id = PA_GetMethodID((PA_Unichar *)Param4.getUTF16StringPtr());
+    PA_long32 method_id = 0;//PA_GetMethodID((PA_Unichar *)Param4.getUTF16StringPtr());
 	
 	if(method_id)
 	{
@@ -140,12 +179,18 @@ CURLcode curl_perform(CURLM *mcurl, CURL *curl, C_TEXT& Param4, C_TEXT& userInfo
 										(PA_Unichar *)userInfo.getUTF16StringPtr());
 	}
 	int running_handles = 0;
-	curl_multi_add_handle(mcurl, curl);
-	curl_multi_perform(mcurl, &running_handles);
-	
+    
+    if(1)
+    {
+        std::lock_guard<std::mutex> lock(mutexMcurl);
+        
+        curl_multi_add_handle(mcurl, curl);
+        curl_multi_perform(mcurl, &running_handles);
+    }
+
 	do
 	{
-		PA_YieldAbsolute();
+		PA_YieldAbsolute2();
 		
 		struct timeval tv;
 		int rc = 0;
@@ -164,19 +209,24 @@ CURLcode curl_perform(CURLM *mcurl, CURL *curl, C_TEXT& Param4, C_TEXT& userInfo
 		tv.tv_sec = 1;
 		tv.tv_usec = 0;
 		
-		curl_multi_timeout(mcurl, &curl_timeout);
-
-		if(curl_timeout >= 0)
-		{
-			tv.tv_sec = curl_timeout / 1000;
-			if(tv.tv_sec > 1)
-				tv.tv_sec = 1;
-			else
-				tv.tv_usec = (curl_timeout % 1000) * 1000;
-		}
-		
-		mc = curl_multi_fdset(mcurl, &fdread, &fdwrite, &fdexcep, &maxfd);
-		
+        if(1)
+        {
+            std::lock_guard<std::mutex> lock(mutexMcurl);
+            
+            curl_multi_timeout(mcurl, &curl_timeout);
+            
+            if(curl_timeout >= 0)
+            {
+                tv.tv_sec = curl_timeout / 1000;
+                if(tv.tv_sec > 1)
+                tv.tv_sec = 1;
+                else
+                tv.tv_usec = (curl_timeout % 1000) * 1000;
+            }
+            
+            mc = curl_multi_fdset(mcurl, &fdread, &fdwrite, &fdexcep, &maxfd);
+        }
+        
 		if(mc != CURLM_OK)
 		{
 			break;
@@ -185,7 +235,7 @@ CURLcode curl_perform(CURLM *mcurl, CURL *curl, C_TEXT& Param4, C_TEXT& userInfo
 		if(maxfd == -1)
 		{
 			/* https://curl.haxx.se/libcurl/c/multi-post.html */			
-			PA_PutProcessToSleep(PA_GetCurrentProcessNumber(), 6);//100ms
+			PA_PutProcessToSleep2(currentProcessNumber, 6);//100ms
 			rc = 0;
 		}
 		else
@@ -198,12 +248,23 @@ CURLcode curl_perform(CURLM *mcurl, CURL *curl, C_TEXT& Param4, C_TEXT& userInfo
 				break;
 			case 0:
 			default:
-				/* timeout or readable/writable sockets */
-				mc = curl_multi_perform(mcurl, &running_handles);
-				/* callback method */
+            if(1)
+            {
+                std::lock_guard<std::mutex> lock(mutexMcurl);
+                
+                /* timeout or readable/writable sockets */
+                mc = curl_multi_perform(mcurl, &running_handles);
+                /* callback method */
+            }
+
 			{
-				curl_get_info(curl, info);
-				
+                if(1)
+                {
+                    std::lock_guard<std::mutex> lock(mutexMcurl);
+                    
+                    curl_get_info(curl, info);
+                }
+                
 				if(Param4.getUTF16Length())
 				{
 					if(method_id)
@@ -238,7 +299,7 @@ CURLcode curl_perform(CURLM *mcurl, CURL *curl, C_TEXT& Param4, C_TEXT& userInfo
 
 				}
 				
-				if(PA_IsProcessDying())
+				if(PA_IsProcessDying2())
 				{
 					/* abort (runtime explorer, not debugger) */
 					result = CURLE_ABORTED_BY_CALLBACK;
@@ -260,20 +321,26 @@ curl_abort_transfer:
 	
 	struct CURLMsg *m;
 	int msgq = 0;
-	m = curl_multi_info_read(mcurl, &msgq);
-	if(m && (m->msg == CURLMSG_DONE))
-	{
-		result = m->data.result;
-	}
-	
-	if(!Param4.getUTF16Length())
-	{
-		curl_get_info(curl, info);
-		Param4.setUTF16String(&info);
-	}
-	
-	curl_multi_remove_handle(mcurl, curl);
-	
+    
+    if(1)
+    {
+        std::lock_guard<std::mutex> lock(mutexMcurl);
+
+        m = curl_multi_info_read(mcurl, &msgq);
+        if(m && (m->msg == CURLMSG_DONE))
+        {
+            result = m->data.result;
+        }
+        
+        if(!Param4.getUTF16Length())
+        {
+            curl_get_info(curl, info);
+            Param4.setUTF16String(&info);
+        }
+        
+        curl_multi_remove_handle(mcurl, curl);
+    }
+    
 	return result;
 }
 
@@ -309,6 +376,17 @@ size_t curl_read_function(void *buffer,
 	}
 	
 	return len;
+}
+
+size_t curl_header_function(char *buffer,
+                            size_t size,
+                            size_t nmemb,
+                            http_ctx *ctx)
+{
+    size_t len = size * nmemb;
+    ctx->data->addBytes((const uint8_t *)buffer, len);
+    
+    return len;
 }
 
 size_t curl_write_function(void *buffer,
@@ -349,7 +427,8 @@ void cURL_HTTP_Request(sLONG_PTR *pResult, PackagePtr pParams)
 	C_BLOB Param2;
 	C_BLOB Param3;
 	C_TEXT Param4;
-	C_LONGINT returnValue;
+    C_BLOB Param5;
+    C_LONGINT returnValue;
 
 	Param1.fromParamAtIndex(pParams, 1);
 	Param2.fromParamAtIndex(pParams, 2);
@@ -383,6 +462,11 @@ void cURL_HTTP_Request(sLONG_PTR *pResult, PackagePtr pParams)
 	response_ctx.data = &Param3;
 	response_ctx.size = 0L;
 
+    http_ctx header_ctx;
+    header_ctx.pos = 0L;
+    header_ctx.data = &Param5;
+    header_ctx.size = 0L;
+
 #if VERSIONMAC
 	request_ctx.path = (const char *)request_path.c_str();
 	response_ctx.path = (const char *)response_path.c_str();
@@ -411,8 +495,13 @@ void cURL_HTTP_Request(sLONG_PTR *pResult, PackagePtr pParams)
 
 	curl_easy_setopt(curl, CURLOPT_READDATA, &request_ctx);
 	curl_easy_setopt(curl, CURLOPT_READFUNCTION, curl_read_function);
+    
 	curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response_ctx);
 	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, curl_write_function);
+
+    curl_easy_setopt(curl, CURLOPT_HEADERDATA, &header_ctx);
+    curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, curl_header_function);
+    
 	curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 1L);
 	
 	if(isAtomic)
@@ -437,6 +526,8 @@ void cURL_HTTP_Request(sLONG_PTR *pResult, PackagePtr pParams)
 	
 	Param3.toParamAtIndex(pParams, 3);
 	Param4.toParamAtIndex(pParams, 4);
+    Param5.toParamAtIndex(pParams, 5);
+    
 	returnValue.setReturn(pResult);
 }
 
@@ -529,7 +620,10 @@ BOOL curl_set_options(CURL *curl, C_TEXT& Param1, C_TEXT& userInfo,
 						break;
 					case CURLOPT_AUTOPROXY:
 					{
+                        std::lock_guard<std::mutex> lock(mutexPf);
+                        
 						char **proxies = px_proxy_factory_get_proxies(pf, (const char *)url.c_str());
+                        
 						if(proxies)
 						{
 							for (unsigned int j = 0; proxies[j]; ++j)
@@ -699,6 +793,7 @@ BOOL curl_set_options(CURL *curl, C_TEXT& Param1, C_TEXT& userInfo,
 			}
 			
 		}
+        
 		json_delete(option);
 	}
 	return isAtomic;
@@ -708,6 +803,8 @@ BOOL curl_set_options(CURL *curl, C_TEXT& Param1, C_TEXT& userInfo,
 
 CURLoption json_get_curl_option_name(JSONNODE *n)
 {
+    std::lock_guard<std::mutex> lock(mutexJson);
+    
 	CURLoption v = (CURLoption)0;
 	
 	if(n)
@@ -1381,6 +1478,8 @@ void curl_get_info(CURL *curl, CUTF16String& json)
 	char *primaryIp = NULL;
 	char *rtspSessionId = NULL;
 	
+    std::lock_guard<std::mutex> lock(mutexJson);
+    
 	JSONNODE *info = json_new(JSON_NODE);
 	
 	if(CURLE_OK == curl_easy_getinfo(curl, CURLINFO_CONDITION_UNMET, &conditionUnmet))
