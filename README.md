@@ -258,3 +258,6 @@ $error:=cURL_HTTP_Request (JSON Stringify($options);$request;$response;"";$respo
 
 CALL WORKER(1;"method3";Convert to text($responseHeader;"utf-8");String($error))
 ```
+
+<img width="622" alt="2018-09-26 18 39 10" src="https://user-images.githubusercontent.com/1725068/46071670-84736400-c1bb-11e8-9fda-dfe745f085ad.png">
+
