@@ -1,5 +1,5 @@
 # 4d-plugin-curl-http
-HTTP client based on libcurl-7.57.0
+HTTP client based on ~~libcurl-7.57.0~~ libcurl-7.61.1
 
 ### Platform
 
@@ -12,6 +12,8 @@ HTTP client based on libcurl-7.57.0
 <img src="https://cloud.githubusercontent.com/assets/1725068/18940649/21945000-8645-11e6-86ed-4a0f800e5a73.png" width="32" height="32" /> <img src="https://cloud.githubusercontent.com/assets/1725068/18940648/2192ddba-8645-11e6-864d-6d5692d55717.png" width="32" height="32" /> <img src="https://user-images.githubusercontent.com/1725068/41266195-ddf767b2-6e30-11e8-9d6b-2adf6a9f57a5.png" width="32" height="32" />
 
 **Attention**: Starting with v17, __you must not omit a BLOB parameter in compiled mode (cooperative or preemptive)__.
+
+``3.1`` HTTP/2 support
 
 ``3.0`` thread-safe
 
@@ -235,4 +237,24 @@ C_BLOB($request;$response)
 $callback:=""
 
 $error:=cURL_HTTP_Request (JSON Stringify($options);$request;$response;$callback)
+```
+
+* HTTP/2
+
+```
+  //http2 test 
+
+C_OBJECT($options)
+
+OB SET($options;\
+"URL";"https://www.cloudflare.com/";\
+"SSL_VERIFYHOST";0;\
+"SSL_VERIFYPEER";0;\
+"HTTP_VERSION";2)
+
+C_BLOB($request;$response;$responseHeader)
+
+$error:=cURL_HTTP_Request (JSON Stringify($options);$request;$response;"";$responseHeader)
+
+CALL WORKER(1;"method3";Convert to text($responseHeader;"utf-8");String($error))
 ```
