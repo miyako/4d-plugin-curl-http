@@ -18,7 +18,6 @@
 		D120937F13534DCC00A72CAA /* 4DPlugin.h in Headers */ = {isa = PBXBuildFile; fileRef = D120937E13534DCC00A72CAA /* 4DPlugin.h */; };
 		D130064F12F02D9700702C0E /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D130064E12F02D9700702C0E /* Cocoa.framework */; };
 		D1308098200517320061B2A2 /* libcrypto.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D130808E200517320061B2A2 /* libcrypto.a */; };
-		D1308099200517320061B2A2 /* libcurl.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D130808F200517320061B2A2 /* libcurl.a */; };
 		D130809A200517320061B2A2 /* libiconv.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D1308090200517320061B2A2 /* libiconv.a */; };
 		D130809B200517320061B2A2 /* libidn2.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D1308091200517320061B2A2 /* libidn2.a */; };
 		D130809C200517320061B2A2 /* libjson.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D1308092200517320061B2A2 /* libjson.a */; };
@@ -69,6 +68,9 @@
 		D134D4AC1A030BA0008D14EF /* manifest.json in CopyFiles */ = {isa = PBXBuildFile; fileRef = D134D4A91A030B06008D14EF /* manifest.json */; };
 		D13E30BE20D0ECF600CBD844 /* libjson_methods.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D13E30BC20D0ECF600CBD844 /* libjson_methods.cpp */; settings = {COMPILER_FLAGS = "-w"; }; };
 		D13E30BF20D0ECF600CBD844 /* libjson_methods.h in Headers */ = {isa = PBXBuildFile; fileRef = D13E30BD20D0ECF600CBD844 /* libjson_methods.h */; };
+		D16BC584215B824E005B97BF /* libnghttp2.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D16BC581215B824E005B97BF /* libnghttp2.a */; };
+		D16BC585215B824E005B97BF /* libunistring.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D16BC582215B824E005B97BF /* libunistring.a */; };
+		D16BC586215B824E005B97BF /* libcurl.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D16BC583215B824E005B97BF /* libcurl.a */; };
 		D175D9CD1A02E8DD0006B569 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D175D9CC1A02E8DD0006B569 /* CoreGraphics.framework */; };
 		D190A90420F48996008675F5 /* preemptive_methods.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D190A90220F48996008675F5 /* preemptive_methods.cpp */; settings = {COMPILER_FLAGS = "-w"; }; };
 		D190A90520F48996008675F5 /* preemptive_methods.h in Headers */ = {isa = PBXBuildFile; fileRef = D190A90320F48996008675F5 /* preemptive_methods.h */; };
@@ -153,6 +155,9 @@
 		D13E30BC20D0ECF600CBD844 /* libjson_methods.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.objcpp; fileEncoding = 4; name = libjson_methods.cpp; path = include/libjson_methods.cpp; sourceTree = "<group>"; };
 		D13E30BD20D0ECF600CBD844 /* libjson_methods.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = libjson_methods.h; path = include/libjson_methods.h; sourceTree = "<group>"; };
 		D14D10DD1A03A8A5008B3411 /* constants.xlf */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = constants.xlf; sourceTree = "<group>"; };
+		D16BC581215B824E005B97BF /* libnghttp2.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libnghttp2.a; path = ../http2/a/libnghttp2.a; sourceTree = "<group>"; };
+		D16BC582215B824E005B97BF /* libunistring.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libunistring.a; path = ../http2/a/libunistring.a; sourceTree = "<group>"; };
+		D16BC583215B824E005B97BF /* libcurl.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libcurl.a; path = ../http2/a/libcurl.a; sourceTree = "<group>"; };
 		D175D9CC1A02E8DD0006B569 /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
 		D190A90220F48996008675F5 /* preemptive_methods.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.objcpp; fileEncoding = 4; path = preemptive_methods.cpp; sourceTree = "<group>"; };
 		D190A90320F48996008675F5 /* preemptive_methods.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = preemptive_methods.h; sourceTree = "<group>"; };
@@ -163,8 +168,10 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D16BC584215B824E005B97BF /* libnghttp2.a in Frameworks */,
+				D16BC585215B824E005B97BF /* libunistring.a in Frameworks */,
+				D16BC586215B824E005B97BF /* libcurl.a in Frameworks */,
 				D13080A1200517320061B2A2 /* libz.a in Frameworks */,
-				D1308099200517320061B2A2 /* libcurl.a in Frameworks */,
 				D130809D200517320061B2A2 /* libmodman.a in Frameworks */,
 				D130809C200517320061B2A2 /* libjson.a in Frameworks */,
 				D130809B200517320061B2A2 /* libidn2.a in Frameworks */,
@@ -284,6 +291,9 @@
 		D13080A2200517B10061B2A2 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				D16BC583215B824E005B97BF /* libcurl.a */,
+				D16BC581215B824E005B97BF /* libnghttp2.a */,
+				D16BC582215B824E005B97BF /* libunistring.a */,
 				D13080A7200517D10061B2A2 /* LDAP.framework */,
 				D13080A5200517B60061B2A2 /* JavaScriptCore.framework */,
 				D13080A3200517B10061B2A2 /* SystemConfiguration.framework */,
@@ -549,7 +559,10 @@
 				HEADER_SEARCH_PATHS = "";
 				INFOPLIST_FILE = Info.plist;
 				INSTALL_PATH = "$(HOME)/Library/Bundles";
-				LIBRARY_SEARCH_PATHS = "$(PROJECT_DIR)/a";
+				LIBRARY_SEARCH_PATHS = (
+					"$(PROJECT_DIR)/a",
+					"$(PROJECT_DIR)2/a",
+				);
 				LIBRARY_STYLE = Bundle;
 				OTHER_CFLAGS = "";
 				OTHER_LDFLAGS = "";
@@ -592,7 +605,10 @@
 				HEADER_SEARCH_PATHS = "";
 				INFOPLIST_FILE = Info.plist;
 				INSTALL_PATH = "$(HOME)/Library/Bundles";
-				LIBRARY_SEARCH_PATHS = "$(PROJECT_DIR)/a";
+				LIBRARY_SEARCH_PATHS = (
+					"$(PROJECT_DIR)/a",
+					"$(PROJECT_DIR)2/a",
+				);
 				LIBRARY_STYLE = Bundle;
 				OTHER_CFLAGS = "";
 				OTHER_LDFLAGS = "";
@@ -633,7 +649,10 @@
 				HEADER_SEARCH_PATHS = "";
 				INFOPLIST_FILE = Info.plist;
 				INSTALL_PATH = "$(HOME)/Library/Bundles";
-				LIBRARY_SEARCH_PATHS = "$(PROJECT_DIR)/a";
+				LIBRARY_SEARCH_PATHS = (
+					"$(PROJECT_DIR)/a",
+					"$(PROJECT_DIR)2/a",
+				);
 				LIBRARY_STYLE = Bundle;
 				OTHER_CFLAGS = "";
 				OTHER_LDFLAGS = "";
