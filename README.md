@@ -37,7 +37,7 @@ For FTP specific ``libcurl`` implementation, see [4d-plugin-curl-ftp](https://gi
 
 ### Releases
 
-[3.1](https://github.com/miyako/4d-plugin-curl-http/releases/tag/3.1) HTTP/2 support
+[3.2](https://github.com/miyako/4d-plugin-curl-http/releases/tag/3.2) HTTP/2 support
 
 [3.0](https://github.com/miyako/4d-plugin-curl-http/releases/tag/3.0) added ``responseHeader`` __compatibility break__ thread-safe
 
