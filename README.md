@@ -1,5 +1,5 @@
 # 4d-plugin-curl-http
-HTTP client based on ~~libcurl-7.57.0~~ libcurl-7.61.1
+HTTP client based on libcurl-7.62.0
 
 ### Platform
 
@@ -7,17 +7,19 @@ HTTP client based on ~~libcurl-7.57.0~~ libcurl-7.61.1
 |:------:|:-----:|:---------:|:---------:|
 ||<img src="https://cloud.githubusercontent.com/assets/1725068/22371562/1b091f0a-e4db-11e6-8458-8653954a7cce.png" width="24" height="24" />|<img src="https://cloud.githubusercontent.com/assets/1725068/22371562/1b091f0a-e4db-11e6-8458-8653954a7cce.png" width="24" height="24" />|<img src="https://cloud.githubusercontent.com/assets/1725068/22371562/1b091f0a-e4db-11e6-8458-8653954a7cce.png" width="24" height="24" />|
 
+__Mac version is now 64-bit only!__ 
+
 ### Version
 
-<img src="https://cloud.githubusercontent.com/assets/1725068/18940649/21945000-8645-11e6-86ed-4a0f800e5a73.png" width="32" height="32" /> <img src="https://cloud.githubusercontent.com/assets/1725068/18940648/2192ddba-8645-11e6-864d-6d5692d55717.png" width="32" height="32" /> <img src="https://user-images.githubusercontent.com/1725068/41266195-ddf767b2-6e30-11e8-9d6b-2adf6a9f57a5.png" width="32" height="32" />
+<img src="https://cloud.githubusercontent.com/assets/1725068/18940648/2192ddba-8645-11e6-864d-6d5692d55717.png" width="32" height="32" /> <img src="https://user-images.githubusercontent.com/1725068/41266195-ddf767b2-6e30-11e8-9d6b-2adf6a9f57a5.png" width="32" height="32" />
 
 **Attention**: Starting with v17, __you must not omit a BLOB parameter in compiled mode (cooperative or preemptive)__.
 
-``3.1`` HTTP/2 support
+![preemption xx](https://user-images.githubusercontent.com/1725068/41327179-4e839948-6efd-11e8-982b-a670d511e04f.png)
 
-``3.0`` thread-safe
+### Releases
 
-``2.1`` Not ``threadSafe`` because of ~~``PA_IsProcessDying``~~ ~~``PA_GetMethodID``~~ ~~``PA_GetCurrentProcessNumber``~~ ~~``PA_GetProcessInfo``~~ ~~``PA_YieldAbsolute``~~ ~~``PA_PutProcessToSleep``~~
+[3.3](https://github.com/miyako/4d-plugin-curl-http/releases/tag/3.3) HTTP/2 support
 
 This is an HTTP specific ``libcurl`` implementation 
 
@@ -34,21 +36,6 @@ For FTP specific ``libcurl`` implementation, see [4d-plugin-curl-ftp](https://gi
 * callback method to monitor progress or abort if necessary
 
 * reduced CPU consumption
-
-### Releases
-
-[3.2](https://github.com/miyako/4d-plugin-curl-http/releases/tag/3.2) HTTP/2 support
-
-[3.0](https://github.com/miyako/4d-plugin-curl-http/releases/tag/3.0) added ``responseHeader`` __compatibility break__ thread-safe
-
-![preemption xx](https://user-images.githubusercontent.com/1725068/41327179-4e839948-6efd-11e8-982b-a670d511e04f.png)
-
-
-[2.1](https://github.com/miyako/4d-plugin-curl-http/releases/tag/2.1) added option [POST](https://curl.haxx.se/libcurl/c/CURLOPT_POST.html) 
-
-[1.1](https://github.com/miyako/4d-plugin-curl-http/releases/tag/1.1.0) performance improvement; return ``curlInfo`` if empty string is passed to ``callbackMethod``
-
-[1.0](https://github.com/miyako/4d-plugin-curl-http/releases/tag/1.0)
 
 ## Syntax
 
@@ -198,6 +185,18 @@ a special option named ``AUTOPROXY`` can be used to let ``libproxy`` find the pr
 [SSLVERSION](https://curl.haxx.se/libcurl/c/CURLOPT_SSLVERSION.html)  value: ``SSLv2`` ``SSLv3`` ``TLSv1.0`` ``TLSv1.1`` ``TLSv1.2`` ``TLSv1.3``  
 [VERIFYSTATUS](https://curl.haxx.se/libcurl/c/CURLOPT_SSL_VERIFYSTATUS.html)  number  
 [KEYPASSWD](https://curl.haxx.se/libcurl/c/CURLOPT_KEYPASSWD.html)  string  
+
+* added in ``3.3``
+
+[CURLOPT_TLS13_CIPHERS](https://curl.haxx.se/libcurl/c/CURLOPT_TLS13_CIPHERS.html)  
+[CURLOPT_PROXY_TLS13_CIPHERS](https://curl.haxx.se/libcurl/c/CURLOPT_PROXY_TLS13_CIPHERS.html)  
+[CURLOPT_UPKEEP_INTERVAL_MS](https://curl.haxx.se/libcurl/c/CURLOPT_UPKEEP_INTERVAL_MS.html)  
+[CURLOPT_HAPROXYPROTOCOL](https://curl.haxx.se/libcurl/c/CURLOPT_HAPROXYPROTOCOL.html)  
+[CURLOPT_DISALLOW_USERNAME_IN_URL](https://curl.haxx.se/libcurl/c/CURLOPT_DISALLOW_USERNAME_IN_URL.html)  
+[CURLOPT_DNS_SHUFFLE_ADDRESSES](https://curl.haxx.se/libcurl/c/CURLOPT_DNS_SHUFFLE_ADDRESSES.html)  
+[CURLOPT_HAPPY_EYEBALLS_TIMEOUT_MS](https://curl.haxx.se/libcurl/c/CURLOPT_HAPPY_EYEBALLS_TIMEOUT_MS.html)  
+[CURLOPT_UPLOAD_BUFFERSIZE](https://curl.haxx.se/libcurl/c/CURLOPT_UPLOAD_BUFFERSIZE.html)  
+[CURLOPT_DOH_URL](https://curl.haxx.se/libcurl/c/CURLOPT_DOH_URL.html)
 
 ## Examples
 
