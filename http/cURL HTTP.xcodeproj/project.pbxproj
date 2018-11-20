@@ -66,11 +66,9 @@
 		D13116F41A03C7AF00DE1322 /* ARRAY_DATE.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D13116F21A03C7AF00DE1322 /* ARRAY_DATE.cpp */; settings = {COMPILER_FLAGS = "-w"; }; };
 		D13116F51A03C7AF00DE1322 /* ARRAY_DATE.h in Headers */ = {isa = PBXBuildFile; fileRef = D13116F31A03C7AF00DE1322 /* ARRAY_DATE.h */; };
 		D134D4AC1A030BA0008D14EF /* manifest.json in CopyFiles */ = {isa = PBXBuildFile; fileRef = D134D4A91A030B06008D14EF /* manifest.json */; };
-		D13E30BE20D0ECF600CBD844 /* libjson_methods.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D13E30BC20D0ECF600CBD844 /* libjson_methods.cpp */; settings = {COMPILER_FLAGS = "-w"; }; };
-		D13E30BF20D0ECF600CBD844 /* libjson_methods.h in Headers */ = {isa = PBXBuildFile; fileRef = D13E30BD20D0ECF600CBD844 /* libjson_methods.h */; };
-		D16BC584215B824E005B97BF /* libnghttp2.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D16BC581215B824E005B97BF /* libnghttp2.a */; };
-		D16BC585215B824E005B97BF /* libunistring.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D16BC582215B824E005B97BF /* libunistring.a */; };
-		D16BC586215B824E005B97BF /* libcurl.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D16BC583215B824E005B97BF /* libcurl.a */; };
+		D1495A5321A443470014C766 /* libcurl.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D130808F200517320061B2A2 /* libcurl.a */; };
+		D1495A5621A443470014C766 /* libnghttp2.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D1495A5421A443470014C766 /* libnghttp2.a */; };
+		D1495A5721A443470014C766 /* libunistring.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D1495A5521A443470014C766 /* libunistring.a */; };
 		D175D9CD1A02E8DD0006B569 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D175D9CC1A02E8DD0006B569 /* CoreGraphics.framework */; };
 		D190A90420F48996008675F5 /* preemptive_methods.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D190A90220F48996008675F5 /* preemptive_methods.cpp */; settings = {COMPILER_FLAGS = "-w"; }; };
 		D190A90520F48996008675F5 /* preemptive_methods.h in Headers */ = {isa = PBXBuildFile; fileRef = D190A90320F48996008675F5 /* preemptive_methods.h */; };
@@ -152,8 +150,9 @@
 		D13116F21A03C7AF00DE1322 /* ARRAY_DATE.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.objcpp; fileEncoding = 4; name = ARRAY_DATE.cpp; path = Classes/ARRAY_DATE.cpp; sourceTree = "<group>"; };
 		D13116F31A03C7AF00DE1322 /* ARRAY_DATE.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ARRAY_DATE.h; path = Classes/ARRAY_DATE.h; sourceTree = "<group>"; };
 		D134D4A91A030B06008D14EF /* manifest.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = manifest.json; sourceTree = "<group>"; };
-		D13E30BC20D0ECF600CBD844 /* libjson_methods.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.objcpp; fileEncoding = 4; name = libjson_methods.cpp; path = include/libjson_methods.cpp; sourceTree = "<group>"; };
-		D13E30BD20D0ECF600CBD844 /* libjson_methods.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = libjson_methods.h; path = include/libjson_methods.h; sourceTree = "<group>"; };
+		D1495A5121A443390014C766 /* a */ = {isa = PBXFileReference; lastKnownFileType = folder; path = a; sourceTree = "<group>"; };
+		D1495A5421A443470014C766 /* libnghttp2.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libnghttp2.a; path = a/libnghttp2.a; sourceTree = "<group>"; };
+		D1495A5521A443470014C766 /* libunistring.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libunistring.a; path = a/libunistring.a; sourceTree = "<group>"; };
 		D14D10DD1A03A8A5008B3411 /* constants.xlf */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = constants.xlf; sourceTree = "<group>"; };
 		D16BC581215B824E005B97BF /* libnghttp2.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libnghttp2.a; path = ../http2/a/libnghttp2.a; sourceTree = "<group>"; };
 		D16BC582215B824E005B97BF /* libunistring.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libunistring.a; path = ../http2/a/libunistring.a; sourceTree = "<group>"; };
@@ -168,9 +167,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D16BC584215B824E005B97BF /* libnghttp2.a in Frameworks */,
-				D16BC585215B824E005B97BF /* libunistring.a in Frameworks */,
-				D16BC586215B824E005B97BF /* libcurl.a in Frameworks */,
+				D1495A5621A443470014C766 /* libnghttp2.a in Frameworks */,
+				D1495A5721A443470014C766 /* libunistring.a in Frameworks */,
+				D1495A5321A443470014C766 /* libcurl.a in Frameworks */,
 				D13080A1200517320061B2A2 /* libz.a in Frameworks */,
 				D130809D200517320061B2A2 /* libmodman.a in Frameworks */,
 				D130809C200517320061B2A2 /* libjson.a in Frameworks */,
@@ -196,7 +195,6 @@
 			isa = PBXGroup;
 			children = (
 				D190A90120F4890F008675F5 /* preemptive */,
-				D13E30C020D0F8EC00CBD844 /* libjson */,
 				D130808D200517320061B2A2 /* a */,
 				D108BD7A1A03D1E6001F1B90 /* Manifest */,
 				08FB77ADFE841716C02AAC07 /* Source */,
@@ -291,6 +289,9 @@
 		D13080A2200517B10061B2A2 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				D1495A5421A443470014C766 /* libnghttp2.a */,
+				D1495A5521A443470014C766 /* libunistring.a */,
+				D1495A5121A443390014C766 /* a */,
 				D16BC583215B824E005B97BF /* libcurl.a */,
 				D16BC581215B824E005B97BF /* libnghttp2.a */,
 				D16BC582215B824E005B97BF /* libunistring.a */,
@@ -347,15 +348,6 @@
 			name = ARRAY;
 			sourceTree = "<group>";
 		};
-		D13E30C020D0F8EC00CBD844 /* libjson */ = {
-			isa = PBXGroup;
-			children = (
-				D13E30BC20D0ECF600CBD844 /* libjson_methods.cpp */,
-				D13E30BD20D0ECF600CBD844 /* libjson_methods.h */,
-			);
-			name = libjson;
-			sourceTree = "<group>";
-		};
 		D190A90120F4890F008675F5 /* preemptive */ = {
 			isa = PBXGroup;
 			children = (
@@ -392,7 +384,6 @@
 				18B684F906944F2000CC6A1E /* Flags.h in Headers */,
 				D13116E31A03BC1100DE1322 /* ARRAY_BOOLEAN.h in Headers */,
 				D13116B11A03B33D00DE1322 /* C_INTEGER.h in Headers */,
-				D13E30BF20D0ECF600CBD844 /* libjson_methods.h in Headers */,
 				18B684FA06944F2000CC6A1E /* PrivateTypes.h in Headers */,
 				18B684FB06944F2000CC6A1E /* PublicTypes.h in Headers */,
 				D13116E91A03BC1100DE1322 /* ARRAY_REAL.h in Headers */,
@@ -494,7 +485,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D13E30BE20D0ECF600CBD844 /* libjson_methods.cpp in Sources */,
 				D13116AC1A03B10800DE1322 /* C_LONGINT.cpp in Sources */,
 				D13116E81A03BC1100DE1322 /* ARRAY_REAL.cpp in Sources */,
 				18B684FF06944F8800CC6A1E /* 4DPlugin.cpp in Sources */,
@@ -569,7 +559,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.4D.curl-http";
 				PRODUCT_NAME = "cURL HTTP";
-				SDKROOT = macosx10.9;
+				SDKROOT = macosx;
 				SECTORDER_FLAGS = "";
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -615,7 +605,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.4D.curl-http";
 				PRODUCT_NAME = "cURL HTTP";
-				SDKROOT = macosx10.9;
+				SDKROOT = macosx;
 				SECTORDER_FLAGS = "";
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -659,7 +649,7 @@
 				OTHER_REZFLAGS = "";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.4D.curl-http";
 				PRODUCT_NAME = "cURL HTTP";
-				SDKROOT = macosx10.9;
+				SDKROOT = macosx;
 				SECTORDER_FLAGS = "";
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -673,7 +663,7 @@
 		42D60B440A9DDBC8002ABB42 /* Development */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
 				CLANG_CXX_LANGUAGE_STANDARD = "compiler-default";
 				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
@@ -711,7 +701,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 10.9;
 				OBJROOT = "$(SRCROOT)/build";
-				SDKROOT = macosx10.9;
+				SDKROOT = macosx;
 				SYMROOT = "$(SRCROOT)/$(PRODUCT_NAME).4dbase/Plugins";
 				USER_HEADER_SEARCH_PATHS = "include include/curl include/libjson";
 			};
@@ -720,7 +710,7 @@
 		42D60B450A9DDBC8002ABB42 /* Deployment */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
 				CLANG_CXX_LANGUAGE_STANDARD = "compiler-default";
 				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
@@ -758,7 +748,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 10.9;
 				OBJROOT = "$(SRCROOT)/build";
-				SDKROOT = macosx10.9;
+				SDKROOT = macosx;
 				SYMROOT = "$(SRCROOT)/$(PRODUCT_NAME).4dbase/Plugins";
 				USER_HEADER_SEARCH_PATHS = "include include/curl include/libjson";
 			};
@@ -767,7 +757,7 @@
 		42D60B460A9DDBC8002ABB42 /* Default */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
 				CLANG_CXX_LANGUAGE_STANDARD = "compiler-default";
 				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
@@ -803,7 +793,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 10.9;
-				SDKROOT = macosx10.9;
+				SDKROOT = macosx;
 				SYMROOT = "$(SRCROOT)/$(PRODUCT_NAME).4dbase/Plugins";
 				USER_HEADER_SEARCH_PATHS = "include include/curl include/libjson";
 			};

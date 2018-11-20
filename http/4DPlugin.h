@@ -100,16 +100,5 @@ BOOL curl_set_options(CURL *curl, C_TEXT& Param1, C_TEXT& userInfo,
 
 void curl_get_info(CURL *curl, CUTF16String& json);
 
-/*
- 
- thread-undafe entry points
- 
- PA_IsProcessDying
- PA_GetMethodID
- PA_GetCurrentProcessNumber
- PA_GetProcessInfo
- 
- */
-
 // --- HTTP
 void cURL_HTTP_Request(sLONG_PTR *pResult, PackagePtr pParams);
