@@ -520,6 +520,9 @@ BOOL curl_set_options(CURL *curl, C_TEXT& Param1, C_TEXT& userInfo,
 	
 	std::wstring Param1_option;
 	json_wconv((const char *)Param1_u8.c_str(), Param1_option);
+    
+    std::lock_guard<std::mutex> lock(mutexJson);
+    
 	JSONNODE *option = json_parse(Param1_option.c_str());
 	
 	if(option)
@@ -527,7 +530,7 @@ BOOL curl_set_options(CURL *curl, C_TEXT& Param1, C_TEXT& userInfo,
 		if (json_type(option) == JSON_NODE)
 		{
 			CURLoption curl_option;
-			/* get the url first */
+			/* get the url first for libproxy */
 			CUTF8String url;
 			JSONNODE_ITERATOR i = json_begin(option);
 			
@@ -546,6 +549,7 @@ BOOL curl_set_options(CURL *curl, C_TEXT& Param1, C_TEXT& userInfo,
 					}
 					break;
 				}
+                ++i;
 			}
 			
 			i = json_begin(option);
@@ -980,8 +984,6 @@ void json_stringify(JSONNODE *json, CUTF16String &t, BOOL pretty)
 
 CURLoption json_get_curl_option_name(JSONNODE *n)
 {
-    std::lock_guard<std::mutex> lock(mutexJson);
-    
 	CURLoption v = (CURLoption)0;
 	
 	if(n)
