@@ -100,7 +100,7 @@
 		<dict>
 			<key>hash</key>
 			<data>
-			Zh81PCtVGZKGmzu1Lg0atSJsI6o=
+			lpWmj4TDLHkIguPtmWAyF2Wnnmk=
 			</data>
 			<key>optional</key>
 			<true/>
@@ -380,11 +380,11 @@
 		<dict>
 			<key>hash</key>
 			<data>
-			Zh81PCtVGZKGmzu1Lg0atSJsI6o=
+			lpWmj4TDLHkIguPtmWAyF2Wnnmk=
 			</data>
 			<key>hash2</key>
 			<data>
-			iVkurHiGI1ZasoQ0Xzdpk/G9RS2ixG0BgWN3FlJCgPE=
+			hVngNNsX/8lHBW1v4apYYFUH6zmAPT2e0FDd9sKLRfM=
 			</data>
 			<key>optional</key>
 			<true/>
@@ -404,11 +404,55 @@
 		<dict>
 			<key>hash</key>
 			<data>
-			vEGfY7ZRVUGzsvLZDqMBWeVdhvw=
+			Td2Eo7Vg+IvHhCl+pxrH3ZbWorM=
 			</data>
 			<key>hash2</key>
 			<data>
-			eGVjfg/2xeby3GbMPEMMzOmJ5pyV8ZGZTCLGVjZ8vRA=
+			B9ZUWt6VPz5WTGlQudl0p+9y47lB+kEoM6lsCxQxB20=
+			</data>
+		</dict>
+		<key>Windows/cURL HTTP.exp</key>
+		<dict>
+			<key>hash</key>
+			<data>
+			WpEnMvNgjfYFl0WjJ0CJO2mgwCk=
+			</data>
+			<key>hash2</key>
+			<data>
+			f+H1Tl7M9jdsa9b6U4ZzIZnjbWarz2DqXJ4tK0AA8/k=
+			</data>
+		</dict>
+		<key>Windows/cURL HTTP.iobj</key>
+		<dict>
+			<key>hash</key>
+			<data>
+			o6AY1vtaQZbOoBh62JixtiLxXwQ=
+			</data>
+			<key>hash2</key>
+			<data>
+			6AhYPAhm7yYUNgwp4jHzJo8gJiiN28I0uqfzsqiUhFI=
+			</data>
+		</dict>
+		<key>Windows/cURL HTTP.ipdb</key>
+		<dict>
+			<key>hash</key>
+			<data>
+			qhMeU1tqNpp27M2f5S4cLXcIBI4=
+			</data>
+			<key>hash2</key>
+			<data>
+			qzwoq7GVA8TXIWQMLBTUpLB2ULBfZ+/de7FAF0jz38Y=
+			</data>
+		</dict>
+		<key>Windows/cURL HTTP.lib</key>
+		<dict>
+			<key>hash</key>
+			<data>
+			/CgJOEhefrWBq6qnmyYi/fVIpk4=
+			</data>
+			<key>hash2</key>
+			<data>
+			+EqbuyBFd7HUOIbNuZXZQHnBF0H0ukyw8SljKtoYyDM=
 			</data>
 		</dict>
 		<key>Windows/vcruntime140.dll</key>
@@ -426,11 +470,55 @@
 		<dict>
 			<key>hash</key>
 			<data>
-			fooXRDBV+oB17Giu16RvlHTNdgY=
+			PVToJ0KE4gb0UykYqfG2ahQGmXQ=
 			</data>
 			<key>hash2</key>
 			<data>
-			8aDs0DmT/PwufVSs8fj0Q64rnTrMhqhS41IWHEoIPY4=
+			3iTsxfx6ZwJkd5+QyhaR546GWh5Yrt3Y17NaHsb7ifc=
+			</data>
+		</dict>
+		<key>Windows64/cURL HTTP.exp</key>
+		<dict>
+			<key>hash</key>
+			<data>
+			L10+ZWpIm7Yjbn2tZ9Affwt3xSA=
+			</data>
+			<key>hash2</key>
+			<data>
+			jigkmxwzkLXMcowRP0N6dONUQfRy/y9CipIeYTOYzqA=
+			</data>
+		</dict>
+		<key>Windows64/cURL HTTP.iobj</key>
+		<dict>
+			<key>hash</key>
+			<data>
+			lFyqjGCHAVElm98f980TU2+ugKI=
+			</data>
+			<key>hash2</key>
+			<data>
+			U/mG+XCBW09ASqAygookvXLTGZzYihNEcmwQiXLqCJM=
+			</data>
+		</dict>
+		<key>Windows64/cURL HTTP.ipdb</key>
+		<dict>
+			<key>hash</key>
+			<data>
+			XWk8uZfGITFBwmRjq7EqdK8OXJI=
+			</data>
+			<key>hash2</key>
+			<data>
+			tpN1dA/9j0rIPtqk4V7HUCOB4bkEzDemsg8KeyCtAe0=
+			</data>
+		</dict>
+		<key>Windows64/cURL HTTP.lib</key>
+		<dict>
+			<key>hash</key>
+			<data>
+			+7iq4+MxtwAi5yg0cTkgZgq4nQc=
+			</data>
+			<key>hash2</key>
+			<data>
+			/642ect13QtGjBemRnxHa/70dhUoswOCUYtgKnJq1bo=
 			</data>
 		</dict>
 		<key>Windows64/vcruntime140.dll</key>
