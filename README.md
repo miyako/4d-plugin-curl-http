@@ -17,7 +17,7 @@ HTTP client based on libcurl-7.62.0
 
 ### Releases
 
-[3.5-carbon](https://github.com/miyako/4d-plugin-curl-http/releases/tag/3.5-carbon) HTTP/2 support
+[3.6-carbon](https://github.com/miyako/4d-plugin-curl-http/releases/tag/3.6-carbon) HTTP/2 support
 
 This is an HTTP specific ``libcurl`` implementation 
 
