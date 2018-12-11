@@ -79,29 +79,24 @@ void PluginMain(PA_long32 selector, PA_PluginParameters params)
 
 void CommandDispatcher (PA_long32 pProcNum, sLONG_PTR *pResult, PackagePtr pParams)
 {
-	switch(pProcNum)
-	{
-		case kInitPlugin :
-		case kServerInitPlugin :
-			OnStartup();
-			break;
-
+    switch(pProcNum)
+    {
+        case kInitPlugin :
+        case kServerInitPlugin :
+            OnStartup();
+            break;
+        
         case kDeinitPlugin :
             OnExit();
-        break;
+            break;
         
-        /*
-		case kCloseProcess :
-			OnCloseProcess();
-			break;
-         */
         // --- HTTP
-
-		case 1 :
-			cURL_HTTP_Request(pResult, pParams);
-			break;
-
-	}
+        
+        case 1 :
+            cURL_HTTP_Request(pResult, pParams);
+            break;
+        
+    }
 }
 
 // ------------------------------------- HTTP -------------------------------------
@@ -365,6 +360,68 @@ size_t curl_header_function(char *buffer,
     return len;
 }
 
+size_t curl_debug_function(CURL *curl,
+                           curl_infotype type,
+                           char *data,
+                           size_t size,
+                           http_debug_ctx *ctx)
+{
+    
+#if VERSIONMAC
+    std::string path;
+    path = (const char *)ctx->path;
+#else
+    std::wstring path;
+    path = (const wchar_t *)ctx->path;
+#endif
+    
+    curl_off_t  *f_size = NULL;
+    
+    switch (type)
+    {
+        case CURLINFO_TEXT:
+        path += LOG_CURLINFO_TEXT;
+        f_size = &ctx->size_CURLINFO_TEXT;
+        break;
+        case CURLINFO_HEADER_IN:
+        path += LOG_CURLINFO_HEADER_IN;
+        f_size = &ctx->size_CURLINFO_HEADER_IN;
+        break;
+        case CURLINFO_HEADER_OUT:
+        path += LOG_CURLINFO_HEADER_OUT;
+        f_size = &ctx->size_CURLINFO_HEADER_OUT;
+        break;
+        case CURLINFO_DATA_IN:
+        path += LOG_CURLINFO_DATA_IN;
+        f_size = &ctx->size_CURLINFO_DATA_IN;
+        break;
+        case CURLINFO_DATA_OUT:
+        path += LOG_CURLINFO_DATA_OUT;
+        f_size = &ctx->size_CURLINFO_DATA_OUT;
+        break;
+        case CURLINFO_SSL_DATA_OUT:
+        path += LOG_CURLINFO_SSL_DATA_IN;
+        f_size = &ctx->size_CURLINFO_SSL_DATA_IN;
+        break;
+        case CURLINFO_SSL_DATA_IN:
+        path += LOG_CURLINFO_SSL_DATA_OUT;
+        f_size = &ctx->size_CURLINFO_SSL_DATA_OUT;
+        break;
+    }
+    
+    create_parent_folder((path_t *)path.c_str());
+    FILE *f = CPathOpen ((path_t *)path.c_str(), *f_size ? CPathAppend : CPathCreate);
+    
+    if(f)
+    {
+        *f_size += size;
+        fwrite(data, size, sizeof(char), f);
+        fclose(f);
+    }
+    
+    return 0;
+}
+
 size_t curl_write_function(void *buffer,
 																		size_t size,
 																		size_t nmemb,
@@ -393,6 +450,67 @@ size_t curl_write_function(void *buffer,
 	}
 	
 	return len;
+}
+
+BOOL curl_set_debug_option(CURL *curl,
+                           C_TEXT& Param1,
+                           CPathString& debug_folder_path)
+{
+    BOOL isDebugEnabled = FALSE;
+    CUTF8String Param1_u8;
+    Param1.copyUTF8String(&Param1_u8);
+    
+    std::wstring Param1_option;
+    json_wconv((const char *)Param1_u8.c_str(), Param1_option);
+    
+    std::lock_guard<std::mutex> lock(mutexJson);
+    
+    JSONNODE *option = json_parse(Param1_option.c_str());
+    
+    if(option)
+    {
+        if (json_type(option) == JSON_NODE)
+        {
+            CURLoption curl_option;
+            /* get the url first */
+            CUTF8String path;
+            JSONNODE_ITERATOR i = json_begin(option);
+            
+            while (i != json_end(option))
+            {
+                curl_option = json_get_curl_option_name(*i);
+                if(curl_option == CURLOPT_VERBOSE)
+                {
+                    json_char *value = json_as_string(*i);
+                    
+                    if(value)
+                    {
+#if VERSIONMAC
+                        CUTF16String path;
+                        json_wconv(value, &path);
+                        C_TEXT t;
+                        t.setUTF16String(&path);
+                        CUTF8String _path;
+                        t.copyPath(&_path);
+                        debug_folder_path = (const uint8_t *)_path.c_str();
+                        if(debug_folder_path.at(debug_folder_path.size() - 1) != '/') debug_folder_path += '/';
+#else
+                        debug_folder_path = (const PA_Unichar *)value;
+                        if(debug_folder_path.at(debug_folder_path.size() - 1) != L'\\') debug_folder_path += L'\\';
+#endif
+                        isDebugEnabled = TRUE;
+                        
+                        json_free(value);
+                    }
+                    break;
+                }
+                ++i;
+            }
+            
+        }
+        json_delete(option);
+    }
+    return isDebugEnabled;
 }
 
 #pragma mark main
@@ -442,6 +560,35 @@ void cURL_HTTP_Request(sLONG_PTR *pResult, PackagePtr pParams)
     header_ctx.pos = 0L;
     header_ctx.data = &Param5;
     header_ctx.size = 0L;
+    
+#if WITH_DEBUG_FUNCTION
+    http_debug_ctx debug_ctx;
+    
+    debug_ctx.size_CURLINFO_TEXT = 0L;
+    debug_ctx.size_CURLINFO_HEADER_IN = 0L;
+    debug_ctx.size_CURLINFO_HEADER_OUT = 0L;
+    debug_ctx.size_CURLINFO_DATA_IN = 0L;
+    debug_ctx.size_CURLINFO_DATA_OUT = 0L;
+    debug_ctx.size_CURLINFO_SSL_DATA_IN = 0L;
+    debug_ctx.size_CURLINFO_SSL_DATA_OUT = 0L;
+    
+    CPathString debug_folder_path;
+    
+    if(curl_set_debug_option(curl,
+                             Param1 /* options */,
+                             debug_folder_path))
+    {
+#if VERSIONMAC
+        debug_ctx.path = (const char *)debug_folder_path.c_str();
+#else
+        debug_ctx.path = (const wchar_t *)debug_folder_path.c_str();
+#endif
+        
+        curl_easy_setopt(curl, CURLOPT_VERBOSE, 1);
+        curl_easy_setopt(curl, CURLOPT_DEBUGDATA, &debug_ctx);
+        curl_easy_setopt(curl, CURLOPT_DEBUGFUNCTION, curl_debug_function);
+    }
+#endif
 
 #if VERSIONMAC
 	request_ctx.path = (const char *)request_path.c_str();
@@ -451,8 +598,8 @@ void cURL_HTTP_Request(sLONG_PTR *pResult, PackagePtr pParams)
 	response_ctx.path = (const wchar_t *)response_path.c_str();
 #endif
 	
-	curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE_LARGE, Param2.getBytesLength());
-	curl_easy_setopt(curl, CURLOPT_INFILESIZE_LARGE, Param2.getBytesLength());
+	curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE_LARGE, (curl_off_t)Param2.getBytesLength());
+	curl_easy_setopt(curl, CURLOPT_INFILESIZE_LARGE, (curl_off_t)Param2.getBytesLength());
 	FILE *f = CPathOpen (request_ctx.path, CPathRead);
 	if(f)
 	{
@@ -644,118 +791,208 @@ BOOL curl_set_options(CURL *curl, C_TEXT& Param1, C_TEXT& userInfo,
 					}
 						break;
 						
-						/* char */
-					case CURLOPT_USERNAME:
-					case CURLOPT_PASSWORD:
-					case CURLOPT_PROXY:
-					case CURLOPT_NOPROXY:
-					case CURLOPT_PROXYTYPE:
-					case CURLOPT_PROXYUSERNAME:
-					case CURLOPT_PROXYPASSWORD:
-					case CURLOPT_PROXY_SERVICE_NAME:
-					case CURLOPT_PROXY_SSLCERTTYPE:
-					case CURLOPT_PROXY_SSLKEYTYPE:
-					case CURLOPT_PROXY_TLSAUTH_USERNAME:
-					case CURLOPT_PROXY_TLSAUTH_PASSWORD:
-					case CURLOPT_PROXY_TLSAUTH_TYPE:
-					case CURLOPT_SSLCERTTYPE:
-					case CURLOPT_SSLKEYTYPE:
-					case CURLOPT_TLSAUTH_TYPE:
-					case CURLOPT_TLSAUTH_USERNAME:
-					case CURLOPT_TLSAUTH_PASSWORD:
-					case CURLOPT_PROXY_SSL_CIPHER_LIST:
-					case CURLOPT_SSL_CIPHER_LIST:
-					case CURLOPT_KEYPASSWD:
-					case CURLOPT_PROXY_KEYPASSWD:
-					case CURLOPT_CUSTOMREQUEST:
-					case CURLOPT_RESUME_FROM_LARGE:
-					case CURLOPT_RANGE:
-					case CURLOPT_REQUEST_TARGET:
-					case CURLOPT_COOKIELIST:
-					case CURLOPT_COOKIE:
-					case CURLOPT_USERAGENT:
-					case CURLOPT_REFERER:
-					case CURLOPT_ACCEPT_ENCODING:
-                    case CURLOPT_PROXY_TLS13_CIPHERS:
+                    /* string */
+                    case CURLOPT_PROXY:
+                    case CURLOPT_USERPWD:
+                    case CURLOPT_PROXYUSERPWD:
+                    case CURLOPT_RANGE:
+                    case CURLOPT_REFERER:
+                    case CURLOPT_FTPPORT:
+                    case CURLOPT_USERAGENT:
+                    case CURLOPT_COOKIE:
+                    case CURLOPT_KEYPASSWD:
+                    case CURLOPT_CUSTOMREQUEST:
+                    case CURLOPT_INTERFACE:
+                    case CURLOPT_KRBLEVEL:
+                    case CURLOPT_RANDOM_FILE:
+                    case CURLOPT_EGDSOCKET:
+                    case CURLOPT_SSL_CIPHER_LIST:
+                    case CURLOPT_SSLCERTTYPE:
+                    case CURLOPT_SSLKEYTYPE:
+                    case CURLOPT_ACCEPT_ENCODING:
+                    case CURLOPT_FTP_ACCOUNT:
+                    case CURLOPT_COOKIELIST:
+                    case CURLOPT_FTP_ALTERNATIVE_TO_USER:
+                    case CURLOPT_SSH_HOST_PUBLIC_KEY_MD5:
+                    case CURLOPT_USERNAME:
+                    case CURLOPT_PASSWORD:
+                    case CURLOPT_PROXYUSERNAME:
+                    case CURLOPT_PROXYPASSWORD:
+                    case CURLOPT_NOPROXY:
+                    case CURLOPT_SSH_KNOWNHOSTS:
+                    case CURLOPT_RTSP_SESSION_ID:
+                    case CURLOPT_RTSP_STREAM_URI:
+                    case CURLOPT_RTSP_TRANSPORT:
+                    case CURLOPT_TLSAUTH_USERNAME:
+                    case CURLOPT_TLSAUTH_PASSWORD:
+                    case CURLOPT_TLSAUTH_TYPE:
+                    case CURLOPT_DNS_SERVERS:
+                    case CURLOPT_MAIL_AUTH:
+                    case CURLOPT_XOAUTH2_BEARER:
+                    case CURLOPT_DNS_INTERFACE:
+                    case CURLOPT_DNS_LOCAL_IP4:
+                    case CURLOPT_DNS_LOCAL_IP6:
+                    case CURLOPT_LOGIN_OPTIONS:
+                    case CURLOPT_PROXY_SERVICE_NAME:
+                    case CURLOPT_SERVICE_NAME:
+                    case CURLOPT_DEFAULT_PROTOCOL:
+                    case CURLOPT_PROXY_TLSAUTH_USERNAME:
+                    case CURLOPT_PROXY_TLSAUTH_PASSWORD:
+                    case CURLOPT_PROXY_TLSAUTH_TYPE:
+                    case CURLOPT_PROXY_SSLCERTTYPE:
+                    case CURLOPT_PROXY_SSLKEYTYPE:
+                    case CURLOPT_PROXY_KEYPASSWD:
+                    case CURLOPT_PROXY_SSL_CIPHER_LIST:
+                    case CURLOPT_PRE_PROXY:
+                    case CURLOPT_PROXY_PINNEDPUBLICKEY:
+                    case CURLOPT_REQUEST_TARGET:
                     case CURLOPT_TLS13_CIPHERS:
+                    case CURLOPT_PROXY_TLS13_CIPHERS:
                     case CURLOPT_DOH_URL:
 						json_get_curl_option_s(curl, curl_option, *i);
 						break;
 						
 						/* path */
-					case CURLOPT_CAINFO:
-					case CURLOPT_PROXY_CAINFO:
-					case CURLOPT_CRLFILE:
-					case CURLOPT_PROXY_CRLFILE:
-					case CURLOPT_COOKIEFILE:
-					case CURLOPT_COOKIEJAR:
-					case CURLOPT_NETRC_FILE:
-					case CURLOPT_SSLCERT:
-					case CURLOPT_SSLKEY:
-					case CURLOPT_PROXY_SSLCERT:
-					case CURLOPT_PROXY_SSLKEY:
-					case CURLOPT_PROXY_PINNEDPUBLICKEY:
-					case CURLOPT_PINNEDPUBLICKEY:
-					case CURLOPT_ISSUERCERT:
+                    case CURLOPT_SSLCERT:
+                    case CURLOPT_COOKIEFILE:
+                    case CURLOPT_CAINFO:
+                    case CURLOPT_COOKIEJAR:
+                    case CURLOPT_SSLKEY:
+                    case CURLOPT_CAPATH:
+                    case CURLOPT_NETRC_FILE:
+                    case CURLOPT_SSH_PUBLIC_KEYFILE:
+                    case CURLOPT_SSH_PRIVATE_KEYFILE:
+                    case CURLOPT_CRLFILE:
+                    case CURLOPT_ISSUERCERT:
+                    case CURLOPT_PROXY_CAINFO:
+                    case CURLOPT_PROXY_CAPATH:
+                    case CURLOPT_PROXY_SSLCERT:
+                    case CURLOPT_PROXY_SSLKEY:
+                    case CURLOPT_PROXY_CRLFILE:
 						json_get_curl_option_p(curl, curl_option, *i);
 						break;
-						
-						/* long */
-					case CURLOPT_VERBOSE:
-					case CURLOPT_PROXYPORT:
-					case CURLOPT_SSL_VERIFYHOST:
-					case CURLOPT_SSL_VERIFYPEER:
-					case CURLOPT_SSL_SESSIONID_CACHE:
-					case CURLOPT_PROXY_SSL_VERIFYHOST:
-					case CURLOPT_PROXY_SSL_VERIFYPEER:
-					case CURLOPT_SSL_ENABLE_ALPN:
-					case CURLOPT_SSL_ENABLE_NPN:
-					case CURLOPT_SSL_FALSESTART:
-					case CURLOPT_SSL_VERIFYSTATUS:
-					case CURLOPT_CONNECTTIMEOUT:
-					case CURLOPT_TIMEOUT:
-					case CURLOPT_LOW_SPEED_TIME:
-					case CURLOPT_LOW_SPEED_LIMIT:
-					case CURLOPT_MAXREDIRS:
-					case CURLOPT_MAXFILESIZE:
-					case CURLOPT_TCP_KEEPIDLE:
-					case CURLOPT_TCP_KEEPALIVE:
-					case CURLOPT_TCP_KEEPINTVL:
-					case CURLOPT_DNS_CACHE_TIMEOUT:
-					case CURLOPT_EXPECT_100_TIMEOUT_MS:
-					case CURLOPT_UPLOAD:
-					case CURLOPT_POST:
-					case CURLOPT_NOBODY:
-					case CURLOPT_AUTOREFERER:
-					case CURLOPT_FOLLOWLOCATION:
-					case CURLOPT_UNRESTRICTED_AUTH:
-					case CURLOPT_COOKIESESSION:
-					case CURLOPT_IGNORE_CONTENT_LENGTH:
-					case CURLOPT_HTTP_CONTENT_DECODING:
-					case CURLOPT_TRANSFER_ENCODING:
-					case CURLOPT_HTTP_TRANSFER_DECODING:
-					case CURLOPT_RESUME_FROM:
+					
+                    /* path or value */
+                    case CURLOPT_PINNEDPUBLICKEY:
+                    json_get_curl_option_k(curl, curl_option, *i);
+                    break;
+                    
+                    /* longint */
+                    case CURLOPT_PORT:
+                    case CURLOPT_TIMEOUT:
+                    case CURLOPT_LOW_SPEED_LIMIT:
+                    case CURLOPT_LOW_SPEED_TIME:
+                    case CURLOPT_RESUME_FROM:
+                    case CURLOPT_CRLF:
+                    case CURLOPT_TIMEVALUE:
+                    case CURLOPT_HEADER:
+                    case CURLOPT_NOBODY:
+                    case CURLOPT_FAILONERROR:
+                    case CURLOPT_UPLOAD:
+                    case CURLOPT_POST:
+                    case CURLOPT_DIRLISTONLY:
+                    case CURLOPT_APPEND:
+                    case CURLOPT_NETRC:
+                    case CURLOPT_FOLLOWLOCATION:
+                    case CURLOPT_PUT:
+                    case CURLOPT_AUTOREFERER:
+                    case CURLOPT_PROXYPORT:
+                    case CURLOPT_HTTPPROXYTUNNEL:
+                    case CURLOPT_SSL_VERIFYPEER:
+                    case CURLOPT_MAXREDIRS:
+                    case CURLOPT_FILETIME:
+                    case CURLOPT_MAXCONNECTS:
+                    case CURLOPT_FRESH_CONNECT:
+                    case CURLOPT_FORBID_REUSE:
+                    case CURLOPT_CONNECTTIMEOUT:
+                    case CURLOPT_HTTPGET:
+                    case CURLOPT_SSL_VERIFYHOST:
+                    case CURLOPT_FTP_USE_EPSV:
+                    case CURLOPT_DNS_CACHE_TIMEOUT:
+                    case CURLOPT_COOKIESESSION:
+                    case CURLOPT_BUFFERSIZE:
+                    case CURLOPT_UNRESTRICTED_AUTH:
+                    case CURLOPT_FTP_USE_EPRT:
+//                    case CURLOPT_HTTPAUTH:
+                    case CURLOPT_FTP_CREATE_MISSING_DIRS:
+//                    case CURLOPT_PROXYAUTH:
+                    case CURLOPT_FTP_RESPONSE_TIMEOUT:
+                    case CURLOPT_IPRESOLVE:
+                    case CURLOPT_MAXFILESIZE:
+                    case CURLOPT_IGNORE_CONTENT_LENGTH:
+                    case CURLOPT_FTP_SKIP_PASV_IP:
+                    case CURLOPT_FTP_FILEMETHOD:
+                    case CURLOPT_LOCALPORT:
+                    case CURLOPT_LOCALPORTRANGE:
+                    case CURLOPT_CONNECT_ONLY:
+                    case CURLOPT_SSL_SESSIONID_CACHE:
+                    case CURLOPT_SSH_AUTH_TYPES:
+                    case CURLOPT_FTP_SSL_CCC:
+                    case CURLOPT_TIMEOUT_MS:
+                    case CURLOPT_CONNECTTIMEOUT_MS:
+                    case CURLOPT_HTTP_TRANSFER_DECODING:
+                    case CURLOPT_HTTP_CONTENT_DECODING:
+                    case CURLOPT_NEW_FILE_PERMS:
+                    case CURLOPT_NEW_DIRECTORY_PERMS:
+                    case CURLOPT_POSTREDIR:
+                    case CURLOPT_PROXY_TRANSFER_MODE:
+                    case CURLOPT_ADDRESS_SCOPE:
+                    case CURLOPT_CERTINFO:
+                    case CURLOPT_TFTP_BLKSIZE:
+                    case CURLOPT_PROTOCOLS:
+                    case CURLOPT_REDIR_PROTOCOLS:
+                    case CURLOPT_FTP_USE_PRET:
+                    case CURLOPT_RTSP_REQUEST:
+                    case CURLOPT_RTSP_CLIENT_CSEQ:
+                    case CURLOPT_RTSP_SERVER_CSEQ:
+                    case CURLOPT_WILDCARDMATCH:
+                    case CURLOPT_TRANSFER_ENCODING:
+                    case CURLOPT_ACCEPTTIMEOUT_MS:
+                    case CURLOPT_TCP_KEEPALIVE:
+                    case CURLOPT_TCP_KEEPIDLE:
+                    case CURLOPT_TCP_KEEPINTVL:
+                    case CURLOPT_SASL_IR:
+                    case CURLOPT_SSL_ENABLE_NPN:
+                    case CURLOPT_SSL_ENABLE_ALPN:
+                    case CURLOPT_EXPECT_100_TIMEOUT_MS:
+                    case CURLOPT_SSL_VERIFYSTATUS:
+                    case CURLOPT_SSL_FALSESTART:
+                    case CURLOPT_PATH_AS_IS:
+                    case CURLOPT_PIPEWAIT:
+                    case CURLOPT_STREAM_WEIGHT:
+                    case CURLOPT_TFTP_NO_OPTIONS:
+                    case CURLOPT_TCP_FASTOPEN:
+                    case CURLOPT_KEEP_SENDING_ON_ERROR:
+                    case CURLOPT_PROXY_SSL_VERIFYPEER:
+                    case CURLOPT_PROXY_SSL_VERIFYHOST:
+                    case CURLOPT_PROXY_SSL_OPTIONS:
+                    case CURLOPT_SUPPRESS_CONNECT_HEADERS:
+                    case CURLOPT_SOCKS5_AUTH:
+                    case CURLOPT_SSH_COMPRESSION:
                     case CURLOPT_HAPPY_EYEBALLS_TIMEOUT_MS:
                     case CURLOPT_HAPROXYPROTOCOL:
+                    case CURLOPT_DNS_SHUFFLE_ADDRESSES:
+                    case CURLOPT_DISALLOW_USERNAME_IN_URL:
                     case CURLOPT_UPLOAD_BUFFERSIZE:
                     case CURLOPT_UPKEEP_INTERVAL_MS:
-                    case CURLOPT_DISALLOW_USERNAME_IN_URL:
-                    case CURLOPT_DNS_SHUFFLE_ADDRESSES:
 						json_get_curl_option_i(curl, curl_option, *i);
 						break;
 						
-						/* constant or long */
-					case CURLOPT_USE_SSL:
-					case CURLOPT_PROXY_SSLVERSION:
-					case CURLOPT_SSLVERSION:
-					case CURLOPT_HTTP_VERSION:
+                    /* constant or long */
+                    case CURLOPT_USE_SSL:
+                    case CURLOPT_SSLVERSION:
+                    case CURLOPT_HTTP_VERSION:
+                    case CURLOPT_PROXY_SSLVERSION:
+                    case CURLOPT_TIMECONDITION:
+                    case CURLOPT_PROXYTYPE:
+                    case CURLOPT_FTPSSLAUTH:
+                    case CURLOPT_HEADEROPT:
 						json_get_curl_option_c(curl, curl_option, *i);
 						break;
 						
 						/* constant bit mask or long */
 					case CURLOPT_HTTPAUTH:
 					case CURLOPT_PROXYAUTH:
-						
 						json_get_curl_option_m(curl, curl_option, *i);
 						break;
 						
@@ -960,6 +1197,22 @@ void json_set_i_for_key(JSONNODE *n, json_char *key, json_int_t value)
     }
 }
 
+void json_set_f_for_key(JSONNODE *n, json_char *key, json_number value)
+{
+    if (n)
+    {
+        JSONNODE *e = json_get(n, key);
+        if (e)
+        {
+            json_set_f(e, value);//over-write existing value
+        }
+        else
+        {
+            json_push_back(n, json_new_f(key, value));
+        }
+    }
+}
+
 void json_stringify(JSONNODE *json, CUTF16String &t, BOOL pretty)
 {
     json_char *json_string = pretty ? json_write_formatted(json) : json_write(json);
@@ -995,424 +1248,809 @@ CURLoption json_get_curl_option_name(JSONNODE *n)
 		if (name)
 		{
 			std::wstring s = std::wstring((const wchar_t *)name);
-			/* general */
-			if (s.compare(L"ATOMIC") == 0)
-			{
-				v = (CURLoption)CURLOPT_ATOMIC;goto json_get_curl_option_exit;
-			}
-			if (s.compare(L"VERBOSE") == 0)
+			
+            /* special string */
+            if (s.compare(L"URL") == 0)
+            {
+                v = CURLOPT_URL;goto json_get_curl_option_exit;
+            }
+            /* READDATA */
+            /* WRITEDATA */
+            if (s.compare(L"REQUEST") == 0)
+            {
+                v = (CURLoption)CURLOPT_REQUEST;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"RESPONSE") == 0)
+            {
+                v = (CURLoption)CURLOPT_RESPONSE;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"AUTOPROXY") == 0)
+            {
+                v = (CURLoption)CURLOPT_AUTOPROXY;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"PRIVATE") == 0)
+            {
+                v = CURLOPT_PRIVATE;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"ATOMIC") == 0)
+            {
+                v = (CURLoption)CURLOPT_ATOMIC;goto json_get_curl_option_exit;
+            }
+			if (s.compare(L"DEBUG") == 0)
 			{
 				v = CURLOPT_VERBOSE;goto json_get_curl_option_exit;
 			}
-			if (s.compare(L"REQUEST") == 0)
-			{
-				v = (CURLoption)CURLOPT_REQUEST;goto json_get_curl_option_exit;
-			}
-			if (s.compare(L"RESPONSE") == 0)
-			{
-				v = (CURLoption)CURLOPT_RESPONSE;goto json_get_curl_option_exit;
-			}
-			if (s.compare(L"URL") == 0)
-			{
-				v = CURLOPT_URL;goto json_get_curl_option_exit;
-			}
-			if (s.compare(L"USERNAME") == 0)
-			{
-				v = CURLOPT_USERNAME;goto json_get_curl_option_exit;
-			}
-			if (s.compare(L"PASSWORD") == 0)
-			{
-				v = CURLOPT_PASSWORD;goto json_get_curl_option_exit;
-			}
-			if (s.compare(L"PRIVATE") == 0)
-			{
-				v = CURLOPT_PRIVATE;goto json_get_curl_option_exit;
-			}
-			/* SSL/TLS */
-			if (s.compare(L"USE_SSL") == 0)
-			{
-				v = CURLOPT_USE_SSL;goto json_get_curl_option_exit;
-			}
-			if (s.compare(L"SSL_VERIFYHOST") == 0)
-			{
-				v = CURLOPT_SSL_VERIFYHOST;goto json_get_curl_option_exit;
-			}
-			if (s.compare(L"SSL_VERIFYPEER") == 0)
-			{
-				v = CURLOPT_SSL_VERIFYPEER;goto json_get_curl_option_exit;
-			}
-			if (s.compare(L"CAINFO") == 0)
-			{
-				v = CURLOPT_CAINFO;goto json_get_curl_option_exit;
-			}
-			if (s.compare(L"SSLCERT") == 0)
-			{
-				v = CURLOPT_SSLCERT;goto json_get_curl_option_exit;
-			}
-			if (s.compare(L"SSLKEY") == 0)
-			{
-				v = CURLOPT_SSLKEY;goto json_get_curl_option_exit;
-			}
-			if (s.compare(L"SSLCERTTYPE") == 0)
-			{
-				v = CURLOPT_SSLCERTTYPE;goto json_get_curl_option_exit;
-			}
-			if (s.compare(L"SSLKEYTYPE") == 0)
-			{
-				v = CURLOPT_SSLKEYTYPE;goto json_get_curl_option_exit;
-			}
-			if (s.compare(L"TLSAUTH_TYPE") == 0)
-			{
-				v = CURLOPT_TLSAUTH_TYPE;goto json_get_curl_option_exit;
-			}
-			if (s.compare(L"TLSAUTH_USERNAME") == 0)
-			{
-				v = CURLOPT_TLSAUTH_USERNAME;goto json_get_curl_option_exit;
-			}
-			if (s.compare(L"TLSAUTH_PASSWORD") == 0)
-			{
-				v = CURLOPT_TLSAUTH_PASSWORD;goto json_get_curl_option_exit;
-			}
-			if (s.compare(L"SSL_SESSIONID_CACHE") == 0)
-			{
-				v = CURLOPT_SSL_SESSIONID_CACHE;goto json_get_curl_option_exit;
-			}
-			if (s.compare(L"SSL_CIPHER_LIST") == 0)
-			{
-				v = CURLOPT_SSL_CIPHER_LIST;goto json_get_curl_option_exit;
-			}
-			if (s.compare(L"PINNEDPUBLICKEY") == 0)
-			{
-				v = CURLOPT_PINNEDPUBLICKEY;goto json_get_curl_option_exit;
-			}
-			if (s.compare(L"ISSUERCERT") == 0)
-			{
-				v = CURLOPT_ISSUERCERT;goto json_get_curl_option_exit;
-			}
-			if (s.compare(L"CRLFILE") == 0)
-			{
-				v = CURLOPT_CRLFILE;goto json_get_curl_option_exit;
-			}
-			if (s.compare(L"SSL_ENABLE_ALPN") == 0)
-			{
-				v = CURLOPT_SSL_ENABLE_ALPN;goto json_get_curl_option_exit;
-			}
-			if (s.compare(L"SSL_ENABLE_NPN") == 0)
-			{
-				v = CURLOPT_SSL_ENABLE_NPN;goto json_get_curl_option_exit;
-			}
-			if (s.compare(L"SSL_FALSESTART") == 0)
-			{
-				v = CURLOPT_SSL_FALSESTART;goto json_get_curl_option_exit;
-			}
-			if (s.compare(L"SSLVERSION") == 0)
-			{
-				v = CURLOPT_SSLVERSION;goto json_get_curl_option_exit;
-			}
-			if (s.compare(L"VERIFYSTATUS") == 0)
-			{
-				v = CURLOPT_SSL_VERIFYSTATUS;goto json_get_curl_option_exit;
-			}
-			if (s.compare(L"KEYPASSWD") == 0)
-			{
-				v = CURLOPT_KEYPASSWD;goto json_get_curl_option_exit;
-			}
-			/* proxy */
-			if (s.compare(L"PROXY") == 0)
-			{
-				v = CURLOPT_PROXY;goto json_get_curl_option_exit;
-			}
-			if (s.compare(L"NOPROXY") == 0)
-			{
-				v = CURLOPT_NOPROXY;goto json_get_curl_option_exit;
-			}
-			if (s.compare(L"PROXYPORT") == 0)
-			{
-				v = CURLOPT_PROXYPORT;goto json_get_curl_option_exit;
-			}
-			if (s.compare(L"PROXYTYPE") == 0)
-			{
-				v = CURLOPT_PROXYTYPE;goto json_get_curl_option_exit;
-			}
-			if (s.compare(L"PROXYUSERNAME") == 0)
-			{
-				v = CURLOPT_PROXYUSERNAME;goto json_get_curl_option_exit;
-			}
-			if (s.compare(L"PROXYPASSWORD") == 0)
-			{
-				v = CURLOPT_PROXYPASSWORD;goto json_get_curl_option_exit;
-			}
-			if (s.compare(L"PROXY_SERVICE_NAME") == 0)
-			{
-				v = CURLOPT_PROXY_SERVICE_NAME;goto json_get_curl_option_exit;
-			}
-			if (s.compare(L"PROXY_SSLCERT") == 0)
-			{
-				v = CURLOPT_PROXY_SSLCERT;goto json_get_curl_option_exit;
-			}
-			if (s.compare(L"PROXY_SSLKEY") == 0)
-			{
-				v = CURLOPT_PROXY_SSLKEY;goto json_get_curl_option_exit;
-			}
-			if (s.compare(L"PROXY_SSLCERTTYPE") == 0)
-			{
-				v = CURLOPT_PROXY_SSLCERTTYPE;goto json_get_curl_option_exit;
-			}
-			if (s.compare(L"PROXY_SSLKEYTYPE") == 0)
-			{
-				v = CURLOPT_PROXY_SSLKEYTYPE;goto json_get_curl_option_exit;
-			}
-			if (s.compare(L"PROXYAUTH") == 0)
-			{
-				v = CURLOPT_PROXYAUTH;goto json_get_curl_option_exit;
-			}
-			if (s.compare(L"PROXY_TLSAUTH_USERNAME") == 0)
-			{
-				v = CURLOPT_PROXY_TLSAUTH_USERNAME;goto json_get_curl_option_exit;
-			}
-			if (s.compare(L"PROXY_TLSAUTH_PASSWORD") == 0)
-			{
-				v = CURLOPT_PROXY_TLSAUTH_PASSWORD;goto json_get_curl_option_exit;
-			}
-			if (s.compare(L"PROXY_TLSAUTH_TYPE") == 0)
-			{
-				v = CURLOPT_PROXY_TLSAUTH_TYPE;goto json_get_curl_option_exit;
-			}
-			if (s.compare(L"PROXY_SSL_CIPHER_LIST") == 0)
-			{
-				v = CURLOPT_PROXY_SSL_CIPHER_LIST;goto json_get_curl_option_exit;
-			}
-			if (s.compare(L"PROXY_PINNEDPUBLICKEY") == 0)
-			{
-				v = CURLOPT_PROXY_PINNEDPUBLICKEY;goto json_get_curl_option_exit;
-			}
-			if (s.compare(L"PROXY_CAINFO") == 0)
-			{
-				v = CURLOPT_PROXY_CAINFO;goto json_get_curl_option_exit;
-			}
-			if (s.compare(L"PROXY_CRLFILE") == 0)
-			{
-				v = CURLOPT_PROXY_CRLFILE;goto json_get_curl_option_exit;
-			}
-			if (s.compare(L"PROXY_SSL_VERIFYHOST") == 0)
-			{
-				v = CURLOPT_PROXY_SSL_VERIFYHOST;goto json_get_curl_option_exit;
-			}
-			if (s.compare(L"PROXY_SSL_VERIFYPEER") == 0)
-			{
-				v = CURLOPT_PROXY_SSL_VERIFYPEER;goto json_get_curl_option_exit;
-			}
-			if (s.compare(L"PROXY_KEYPASSWD") == 0)
-			{
-				v = CURLOPT_PROXY_KEYPASSWD;goto json_get_curl_option_exit;
-			}
-			if (s.compare(L"PROXY_SSLVERSION") == 0)
-			{
-				v = CURLOPT_PROXY_SSLVERSION;goto json_get_curl_option_exit;
-			}
-			if (s.compare(L"AUTOPROXY") == 0)
-			{
-				v = (CURLoption)CURLOPT_AUTOPROXY;goto json_get_curl_option_exit;
-			}
-			/* limits */
-			if (s.compare(L"CONNECTTIMEOUT") == 0)
-			{
-				v = CURLOPT_CONNECTTIMEOUT;goto json_get_curl_option_exit;
-			}
-			if (s.compare(L"TIMEOUT") == 0)
-			{
-				v = CURLOPT_TIMEOUT;goto json_get_curl_option_exit;
-			}
-			if (s.compare(L"LOW_SPEED_TIME") == 0)
-			{
-				v = CURLOPT_LOW_SPEED_TIME;goto json_get_curl_option_exit;
-			}
-			if (s.compare(L"LOW_SPEED_LIMIT") == 0)
-			{
-				v = CURLOPT_LOW_SPEED_LIMIT;goto json_get_curl_option_exit;
-			}
-			if (s.compare(L"MAXREDIRS") == 0)
-			{
-				v = CURLOPT_MAXREDIRS;goto json_get_curl_option_exit;
-			}
-			if (s.compare(L"MAXFILESIZE") == 0)
-			{
-				v = CURLOPT_MAXFILESIZE;goto json_get_curl_option_exit;
-			}
-			if (s.compare(L"TCP_KEEPIDLE") == 0)
-			{
-				v = CURLOPT_TCP_KEEPIDLE;goto json_get_curl_option_exit;
-			}
-			if (s.compare(L"TCP_KEEPALIVE") == 0)
-			{
-				v = CURLOPT_TCP_KEEPALIVE;goto json_get_curl_option_exit;
-			}
-			if (s.compare(L"TCP_KEEPINTVL") == 0)
-			{
-				v = CURLOPT_TCP_KEEPINTVL;goto json_get_curl_option_exit;
-			}
-			if (s.compare(L"DNS_CACHE_TIMEOUT") == 0)
-			{
-				v = CURLOPT_DNS_CACHE_TIMEOUT;goto json_get_curl_option_exit;
-			}
-			if (s.compare(L"EXPECT_100_TIMEOUT_MS") == 0)
-			{
-				v = CURLOPT_EXPECT_100_TIMEOUT_MS;goto json_get_curl_option_exit;
-			}
-			/* HTTP */
-			if (s.compare(L"UPLOAD") == 0)
-			{
-				v = CURLOPT_UPLOAD;goto json_get_curl_option_exit;
-			}
-			if (s.compare(L"POST") == 0)
-			{
-				v = CURLOPT_POST;goto json_get_curl_option_exit;
-			}
-			if (s.compare(L"NOBODY") == 0)
-			{
-				v = CURLOPT_NOBODY;goto json_get_curl_option_exit;
-			}
-			if (s.compare(L"HTTP_VERSION") == 0)
-			{
-				v = CURLOPT_HTTP_VERSION;goto json_get_curl_option_exit;
-			}
-			if (s.compare(L"PROXYHEADER") == 0)
-			{
-				v = CURLOPT_PROXYHEADER;goto json_get_curl_option_exit;
-			}
-			if (s.compare(L"HTTPHEADER") == 0)
-			{
-				v = CURLOPT_HTTPHEADER;goto json_get_curl_option_exit;
-			}
-			if (s.compare(L"HEADEROPT") == 0)
-			{
-				v = CURLOPT_HEADEROPT;goto json_get_curl_option_exit;
-			}
-			if (s.compare(L"AUTOREFERER") == 0)
-			{
-				v = CURLOPT_AUTOREFERER;goto json_get_curl_option_exit;
-			}
-			if (s.compare(L"ACCEPT_ENCODING") == 0)
-			{
-				v = CURLOPT_ACCEPT_ENCODING;goto json_get_curl_option_exit;
-			}
-			if (s.compare(L"FOLLOWLOCATION") == 0)
-			{
-				v = CURLOPT_FOLLOWLOCATION;goto json_get_curl_option_exit;
-			}
-			if (s.compare(L"UNRESTRICTED_AUTH") == 0)
-			{
-				v = CURLOPT_UNRESTRICTED_AUTH;goto json_get_curl_option_exit;
-			}
-			if (s.compare(L"REFERER") == 0)
-			{
-				v = CURLOPT_REFERER;goto json_get_curl_option_exit;
-			}
-			if (s.compare(L"USERAGENT") == 0)
-			{
-				v = CURLOPT_USERAGENT;goto json_get_curl_option_exit;
-			}
-			if (s.compare(L"HTTP200ALIASES") == 0)
-			{
-				v = CURLOPT_HTTP200ALIASES;goto json_get_curl_option_exit;
-			}
-			if (s.compare(L"COOKIE") == 0)
-			{
-				v = CURLOPT_COOKIE;goto json_get_curl_option_exit;
-			}
-			if (s.compare(L"COOKIEFILE") == 0)
-			{
-				v = CURLOPT_COOKIEFILE;goto json_get_curl_option_exit;
-			}
-			if (s.compare(L"COOKIEJAR") == 0)
-			{
-				v = CURLOPT_COOKIEJAR;goto json_get_curl_option_exit;
-			}
-			if (s.compare(L"COOKIESESSION") == 0)
-			{
-				v = CURLOPT_COOKIESESSION;goto json_get_curl_option_exit;
-			}
-			if (s.compare(L"COOKIELIST") == 0)
-			{
-				v = CURLOPT_COOKIELIST;goto json_get_curl_option_exit;
-			}
-			if (s.compare(L"REQUEST_TARGET") == 0)
-			{
-				v = CURLOPT_REQUEST_TARGET;goto json_get_curl_option_exit;
-			}
-			if (s.compare(L"IGNORE_CONTENT_LENGTH") == 0)
-			{
-				v = CURLOPT_IGNORE_CONTENT_LENGTH;goto json_get_curl_option_exit;
-			}
-			if (s.compare(L"CONTENT_DECODING") == 0)
-			{
-				v = CURLOPT_HTTP_CONTENT_DECODING;goto json_get_curl_option_exit;
-			}
-			if (s.compare(L"TRANSFER_ENCODING") == 0)
-			{
-				v = CURLOPT_TRANSFER_ENCODING;goto json_get_curl_option_exit;
-			}
-			if (s.compare(L"TRANSFER_DECODING") == 0)
-			{
-				v = CURLOPT_HTTP_TRANSFER_DECODING;goto json_get_curl_option_exit;
-			}
-			if (s.compare(L"RANGE") == 0)
-			{
-				v = CURLOPT_RANGE;goto json_get_curl_option_exit;
-			}
-			if (s.compare(L"RESUME_FROM") == 0)
-			{
-				v = CURLOPT_RESUME_FROM;goto json_get_curl_option_exit;
-			}
-			if (s.compare(L"RESUME_FROM_LARGE") == 0)
-			{
-				v = CURLOPT_RESUME_FROM_LARGE;goto json_get_curl_option_exit;
-			}
-			if (s.compare(L"CUSTOMREQUEST") == 0)
-			{
-				v = CURLOPT_CUSTOMREQUEST;goto json_get_curl_option_exit;
-			}
-			if (s.compare(L"HTTPAUTH") == 0)
-			{
-				v = CURLOPT_HTTPAUTH;goto json_get_curl_option_exit;
-			}
-            /* added in 2.x */
             
-            if (s.compare(L"UPKEEP_INTERVAL_MS") == 0)
+            /* string */
+            if (s.compare(L"PROXY") == 0)
             {
-                v = CURLOPT_UPKEEP_INTERVAL_MS; goto json_get_curl_option_exit;
+                v = (CURLoption)CURLOPT_PROXY;goto json_get_curl_option_exit;
             }
-            if (s.compare(L"DISALLOW_USERNAME_IN_URL") == 0)
+            if (s.compare(L"USERPWD") == 0)
             {
-                v = CURLOPT_DISALLOW_USERNAME_IN_URL; goto json_get_curl_option_exit;
+                v = (CURLoption)CURLOPT_USERPWD;goto json_get_curl_option_exit;
             }
-            if (s.compare(L"PROXY_TLS13_CIPHERS") == 0)
+            if (s.compare(L"PROXYUSERPWD") == 0)
             {
-                v = CURLOPT_PROXY_TLS13_CIPHERS; goto json_get_curl_option_exit;
+                v = (CURLoption)CURLOPT_PROXYUSERPWD;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"RANGE") == 0)
+            {
+                v = (CURLoption)CURLOPT_RANGE;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"REFERER") == 0)
+            {
+                v = (CURLoption)CURLOPT_REFERER;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"FTPPORT") == 0)
+            {
+                v = (CURLoption)CURLOPT_FTPPORT;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"USERAGENT") == 0)
+            {
+                v = (CURLoption)CURLOPT_USERAGENT;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"COOKIE") == 0)
+            {
+                v = (CURLoption)CURLOPT_COOKIE;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"KEYPASSWD") == 0)
+            {
+                v = (CURLoption)CURLOPT_KEYPASSWD;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"CUSTOMREQUEST") == 0)
+            {
+                v = (CURLoption)CURLOPT_CUSTOMREQUEST;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"INTERFACE") == 0)
+            {
+                v = (CURLoption)CURLOPT_INTERFACE;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"KRBLEVEL") == 0)
+            {
+                v = (CURLoption)CURLOPT_KRBLEVEL;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"RANDOM_FILE") == 0)
+            {
+                v = (CURLoption)CURLOPT_RANDOM_FILE;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"EGDSOCKET") == 0)
+            {
+                v = (CURLoption)CURLOPT_EGDSOCKET;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"SSL_CIPHER_LIST") == 0)
+            {
+                v = (CURLoption)CURLOPT_SSL_CIPHER_LIST;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"SSLCERTTYPE") == 0)
+            {
+                v = (CURLoption)CURLOPT_SSLCERTTYPE;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"SSLKEYTYPE") == 0)
+            {
+                v = (CURLoption)CURLOPT_SSLKEYTYPE;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"ACCEPT_ENCODING") == 0)
+            {
+                v = (CURLoption)CURLOPT_ACCEPT_ENCODING;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"FTP_ACCOUNT") == 0)
+            {
+                v = (CURLoption)CURLOPT_FTP_ACCOUNT;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"COOKIELIST") == 0)
+            {
+                v = (CURLoption)CURLOPT_COOKIELIST;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"FTP_ALTERNATIVE_TO_USER") == 0)
+            {
+                v = (CURLoption)CURLOPT_FTP_ALTERNATIVE_TO_USER;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"SSH_HOST_PUBLIC_KEY_MD5") == 0)
+            {
+                v = (CURLoption)CURLOPT_SSH_HOST_PUBLIC_KEY_MD5;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"USERNAME") == 0)
+            {
+                v = (CURLoption)CURLOPT_USERNAME;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"PASSWORD") == 0)
+            {
+                v = (CURLoption)CURLOPT_PASSWORD;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"PROXYUSERNAME") == 0)
+            {
+                v = (CURLoption)CURLOPT_PROXYUSERNAME;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"PROXYPASSWORD") == 0)
+            {
+                v = (CURLoption)CURLOPT_PROXYPASSWORD;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"NOPROXY") == 0)
+            {
+                v = (CURLoption)CURLOPT_NOPROXY;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"SSH_KNOWNHOSTS") == 0)
+            {
+                v = (CURLoption)CURLOPT_SSH_KNOWNHOSTS;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"RTSP_SESSION_ID") == 0)
+            {
+                v = (CURLoption)CURLOPT_RTSP_SESSION_ID;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"RTSP_STREAM_URI") == 0)
+            {
+                v = (CURLoption)CURLOPT_RTSP_STREAM_URI;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"RTSP_TRANSPORT") == 0)
+            {
+                v = (CURLoption)CURLOPT_RTSP_TRANSPORT;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"TLSAUTH_USERNAME") == 0)
+            {
+                v = (CURLoption)CURLOPT_TLSAUTH_USERNAME;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"TLSAUTH_PASSWORD") == 0)
+            {
+                v = (CURLoption)CURLOPT_TLSAUTH_PASSWORD;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"TLSAUTH_TYPE") == 0)
+            {
+                v = (CURLoption)CURLOPT_TLSAUTH_TYPE;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"DNS_SERVERS") == 0)
+            {
+                v = (CURLoption)CURLOPT_DNS_SERVERS;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"MAIL_AUTH") == 0)
+            {
+                v = (CURLoption)CURLOPT_MAIL_AUTH;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"XOAUTH2_BEARER") == 0)
+            {
+                v = (CURLoption)CURLOPT_XOAUTH2_BEARER;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"DNS_INTERFACE") == 0)
+            {
+                v = (CURLoption)CURLOPT_DNS_INTERFACE;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"DNS_LOCAL_IP4") == 0)
+            {
+                v = (CURLoption)CURLOPT_DNS_LOCAL_IP4;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"DNS_LOCAL_IP6") == 0)
+            {
+                v = (CURLoption)CURLOPT_DNS_LOCAL_IP6;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"LOGIN_OPTIONS") == 0)
+            {
+                v = (CURLoption)CURLOPT_LOGIN_OPTIONS;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"PROXY_SERVICE_NAME") == 0)
+            {
+                v = (CURLoption)CURLOPT_PROXY_SERVICE_NAME;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"SERVICE_NAME") == 0)
+            {
+                v = (CURLoption)CURLOPT_SERVICE_NAME;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"DEFAULT_PROTOCOL") == 0)
+            {
+                v = (CURLoption)CURLOPT_DEFAULT_PROTOCOL;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"PROXY_TLSAUTH_USERNAME") == 0)
+            {
+                v = (CURLoption)CURLOPT_PROXY_TLSAUTH_USERNAME;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"PROXY_TLSAUTH_PASSWORD") == 0)
+            {
+                v = (CURLoption)CURLOPT_PROXY_TLSAUTH_PASSWORD;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"PROXY_TLSAUTH_TYPE") == 0)
+            {
+                v = (CURLoption)CURLOPT_PROXY_TLSAUTH_TYPE;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"PROXY_SSLCERTTYPE") == 0)
+            {
+                v = (CURLoption)CURLOPT_PROXY_SSLCERTTYPE;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"PROXY_SSLKEYTYPE") == 0)
+            {
+                v = (CURLoption)CURLOPT_PROXY_SSLKEYTYPE;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"PROXY_KEYPASSWD") == 0)
+            {
+                v = (CURLoption)CURLOPT_PROXY_KEYPASSWD;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"PROXY_SSL_CIPHER_LIST") == 0)
+            {
+                v = (CURLoption)CURLOPT_PROXY_SSL_CIPHER_LIST;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"PRE_PROXY") == 0)
+            {
+                v = (CURLoption)CURLOPT_PRE_PROXY;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"PROXY_PINNEDPUBLICKEY") == 0)
+            {
+                v = (CURLoption)CURLOPT_PROXY_PINNEDPUBLICKEY;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"REQUEST_TARGET") == 0)
+            {
+                v = (CURLoption)CURLOPT_REQUEST_TARGET;goto json_get_curl_option_exit;
             }
             if (s.compare(L"TLS13_CIPHERS") == 0)
             {
-                v = CURLOPT_TLS13_CIPHERS; goto json_get_curl_option_exit;
+                v = (CURLoption)CURLOPT_TLS13_CIPHERS;goto json_get_curl_option_exit;
             }
-            if (s.compare(L"DNS_SHUFFLE_ADDRESSES") == 0)
+            if (s.compare(L"PROXY_TLS13_CIPHERS") == 0)
             {
-                v = CURLOPT_DNS_SHUFFLE_ADDRESSES; goto json_get_curl_option_exit;
-            }
-            if (s.compare(L"HAPROXYPROTOCOL") == 0)
-            {
-                v = CURLOPT_HAPROXYPROTOCOL; goto json_get_curl_option_exit;
+                v = (CURLoption)CURLOPT_PROXY_TLS13_CIPHERS;goto json_get_curl_option_exit;
             }
             if (s.compare(L"DOH_URL") == 0)
             {
-                v = CURLOPT_DOH_URL; goto json_get_curl_option_exit;
+                v = (CURLoption)CURLOPT_DOH_URL;goto json_get_curl_option_exit;
             }
-            if (s.compare(L"UPLOAD_BUFFERSIZE") == 0)
+            
+            /* path */
+            if (s.compare(L"SSLCERT") == 0)
             {
-                v = CURLOPT_UPLOAD_BUFFERSIZE; goto json_get_curl_option_exit;
+                v = (CURLoption)CURLOPT_SSLCERT;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"COOKIEFILE") == 0)
+            {
+                v = (CURLoption)CURLOPT_COOKIEFILE;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"CAINFO") == 0)
+            {
+                v = (CURLoption)CURLOPT_CAINFO;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"COOKIEJAR") == 0)
+            {
+                v = (CURLoption)CURLOPT_COOKIEJAR;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"SSLKEY") == 0)
+            {
+                v = (CURLoption)CURLOPT_SSLKEY;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"CAPATH") == 0)
+            {
+                v = (CURLoption)CURLOPT_CAPATH;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"NETRC_FILE") == 0)
+            {
+                v = (CURLoption)CURLOPT_NETRC_FILE;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"SSH_PUBLIC_KEYFILE") == 0)
+            {
+                v = (CURLoption)CURLOPT_SSH_PUBLIC_KEYFILE;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"SSH_PRIVATE_KEYFILE") == 0)
+            {
+                v = (CURLoption)CURLOPT_SSH_PRIVATE_KEYFILE;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"CRLFILE") == 0)
+            {
+                v = (CURLoption)CURLOPT_CRLFILE;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"ISSUERCERT") == 0)
+            {
+                v = (CURLoption)CURLOPT_ISSUERCERT;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"PROXY_CAINFO") == 0)
+            {
+                v = (CURLoption)CURLOPT_PROXY_CAINFO;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"PROXY_CAPATH") == 0)
+            {
+                v = (CURLoption)CURLOPT_PROXY_CAPATH;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"PROXY_SSLCERT") == 0)
+            {
+                v = (CURLoption)CURLOPT_PROXY_SSLCERT;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"PROXY_SSLKEY") == 0)
+            {
+                v = (CURLoption)CURLOPT_PROXY_SSLKEY;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"PROXY_CRLFILE") == 0)
+            {
+                v = (CURLoption)CURLOPT_PROXY_CRLFILE;goto json_get_curl_option_exit;
+            }
+            
+            /* path or value */
+            if (s.compare(L"PINNEDPUBLICKEY") == 0)
+            {
+                v = (CURLoption)CURLOPT_PINNEDPUBLICKEY;goto json_get_curl_option_exit;
+            }
+            
+            /* longint */
+            if (s.compare(L"PORT") == 0)
+            {
+                v = (CURLoption)CURLOPT_PORT;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"TIMEOUT") == 0)
+            {
+                v = (CURLoption)CURLOPT_TIMEOUT;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"LOW_SPEED_LIMIT") == 0)
+            {
+                v = (CURLoption)CURLOPT_LOW_SPEED_LIMIT;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"LOW_SPEED_TIME") == 0)
+            {
+                v = (CURLoption)CURLOPT_LOW_SPEED_TIME;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"RESUME_FROM") == 0)
+            {
+                v = (CURLoption)CURLOPT_RESUME_FROM;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"CRLF") == 0)
+            {
+                v = (CURLoption)CURLOPT_CRLF;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"TIMEVALUE") == 0)
+            {
+                v = (CURLoption)CURLOPT_TIMEVALUE;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"HEADER") == 0)
+            {
+                v = (CURLoption)CURLOPT_HEADER;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"NOBODY") == 0)
+            {
+                v = (CURLoption)CURLOPT_NOBODY;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"FAILONERROR") == 0)
+            {
+                v = (CURLoption)CURLOPT_FAILONERROR;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"UPLOAD") == 0)
+            {
+                v = (CURLoption)CURLOPT_UPLOAD;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"POST") == 0)
+            {
+                v = (CURLoption)CURLOPT_POST;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"DIRLISTONLY") == 0)
+            {
+                v = (CURLoption)CURLOPT_DIRLISTONLY;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"APPEND") == 0)
+            {
+                v = (CURLoption)CURLOPT_APPEND;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"NETRC") == 0)
+            {
+                v = (CURLoption)CURLOPT_NETRC;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"FOLLOWLOCATION") == 0)
+            {
+                v = (CURLoption)CURLOPT_FOLLOWLOCATION;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"PUT") == 0)
+            {
+                v = (CURLoption)CURLOPT_PUT;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"AUTOREFERER") == 0)
+            {
+                v = (CURLoption)CURLOPT_AUTOREFERER;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"PROXYPORT") == 0)
+            {
+                v = (CURLoption)CURLOPT_PROXYPORT;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"HTTPPROXYTUNNEL") == 0)
+            {
+                v = (CURLoption)CURLOPT_HTTPPROXYTUNNEL;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"SSL_VERIFYPEER") == 0)
+            {
+                v = (CURLoption)CURLOPT_SSL_VERIFYPEER;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"MAXREDIRS") == 0)
+            {
+                v = (CURLoption)CURLOPT_MAXREDIRS;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"FILETIME") == 0)
+            {
+                v = (CURLoption)CURLOPT_FILETIME;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"MAXCONNECTS") == 0)
+            {
+                v = (CURLoption)CURLOPT_MAXCONNECTS;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"FRESH_CONNECT") == 0)
+            {
+                v = (CURLoption)CURLOPT_FRESH_CONNECT;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"FORBID_REUSE") == 0)
+            {
+                v = (CURLoption)CURLOPT_FORBID_REUSE;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"CONNECTTIMEOUT") == 0)
+            {
+                v = (CURLoption)CURLOPT_CONNECTTIMEOUT;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"HTTPGET") == 0)
+            {
+                v = (CURLoption)CURLOPT_HTTPGET;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"SSL_VERIFYHOST") == 0)
+            {
+                v = (CURLoption)CURLOPT_SSL_VERIFYHOST;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"FTP_USE_EPSV") == 0)
+            {
+                v = (CURLoption)CURLOPT_FTP_USE_EPSV;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"DNS_CACHE_TIMEOUT") == 0)
+            {
+                v = (CURLoption)CURLOPT_DNS_CACHE_TIMEOUT;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"COOKIESESSION") == 0)
+            {
+                v = (CURLoption)CURLOPT_COOKIESESSION;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"BUFFERSIZE") == 0)
+            {
+                v = (CURLoption)CURLOPT_BUFFERSIZE;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"UNRESTRICTED_AUTH") == 0)
+            {
+                v = (CURLoption)CURLOPT_UNRESTRICTED_AUTH;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"FTP_USE_EPRT") == 0)
+            {
+                v = (CURLoption)CURLOPT_FTP_USE_EPRT;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"HTTPAUTH") == 0)
+            {
+                v = (CURLoption)CURLOPT_HTTPAUTH;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"FTP_CREATE_MISSING_DIRS") == 0)
+            {
+                v = (CURLoption)CURLOPT_FTP_CREATE_MISSING_DIRS;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"PROXYAUTH") == 0)
+            {
+                v = (CURLoption)CURLOPT_PROXYAUTH;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"FTP_RESPONSE_TIMEOUT") == 0)
+            {
+                v = (CURLoption)CURLOPT_FTP_RESPONSE_TIMEOUT;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"IPRESOLVE") == 0)
+            {
+                v = (CURLoption)CURLOPT_IPRESOLVE;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"MAXFILESIZE") == 0)
+            {
+                v = (CURLoption)CURLOPT_MAXFILESIZE;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"IGNORE_CONTENT_LENGTH") == 0)
+            {
+                v = (CURLoption)CURLOPT_IGNORE_CONTENT_LENGTH;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"FTP_SKIP_PASV_IP") == 0)
+            {
+                v = (CURLoption)CURLOPT_FTP_SKIP_PASV_IP;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"FTP_FILEMETHOD") == 0)
+            {
+                v = (CURLoption)CURLOPT_FTP_FILEMETHOD;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"LOCALPORT") == 0)
+            {
+                v = (CURLoption)CURLOPT_LOCALPORT;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"LOCALPORTRANGE") == 0)
+            {
+                v = (CURLoption)CURLOPT_LOCALPORTRANGE;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"CONNECT_ONLY") == 0)
+            {
+                v = (CURLoption)CURLOPT_CONNECT_ONLY;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"SSL_SESSIONID_CACHE") == 0)
+            {
+                v = (CURLoption)CURLOPT_SSL_SESSIONID_CACHE;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"SSH_AUTH_TYPES") == 0)
+            {
+                v = (CURLoption)CURLOPT_SSH_AUTH_TYPES;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"FTP_SSL_CCC") == 0)
+            {
+                v = (CURLoption)CURLOPT_FTP_SSL_CCC;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"TIMEOUT_MS") == 0)
+            {
+                v = (CURLoption)CURLOPT_TIMEOUT_MS;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"CONNECTTIMEOUT_MS") == 0)
+            {
+                v = (CURLoption)CURLOPT_CONNECTTIMEOUT_MS;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"HTTP_TRANSFER_DECODING") == 0)
+            {
+                v = (CURLoption)CURLOPT_HTTP_TRANSFER_DECODING;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"HTTP_CONTENT_DECODING") == 0)
+            {
+                v = (CURLoption)CURLOPT_HTTP_CONTENT_DECODING;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"NEW_FILE_PERMS") == 0)
+            {
+                v = (CURLoption)CURLOPT_NEW_FILE_PERMS;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"NEW_DIRECTORY_PERMS") == 0)
+            {
+                v = (CURLoption)CURLOPT_NEW_DIRECTORY_PERMS;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"POSTREDIR") == 0)
+            {
+                v = (CURLoption)CURLOPT_POSTREDIR;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"PROXY_TRANSFER_MODE") == 0)
+            {
+                v = (CURLoption)CURLOPT_PROXY_TRANSFER_MODE;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"ADDRESS_SCOPE") == 0)
+            {
+                v = (CURLoption)CURLOPT_ADDRESS_SCOPE;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"CERTINFO") == 0)
+            {
+                v = (CURLoption)CURLOPT_CERTINFO;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"TFTP_BLKSIZE") == 0)
+            {
+                v = (CURLoption)CURLOPT_TFTP_BLKSIZE;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"PROTOCOLS") == 0)
+            {
+                v = (CURLoption)CURLOPT_PROTOCOLS;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"REDIR_PROTOCOLS") == 0)
+            {
+                v = (CURLoption)CURLOPT_REDIR_PROTOCOLS;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"FTP_USE_PRET") == 0)
+            {
+                v = (CURLoption)CURLOPT_FTP_USE_PRET;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"RTSP_REQUEST") == 0)
+            {
+                v = (CURLoption)CURLOPT_RTSP_REQUEST;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"RTSP_CLIENT_CSEQ") == 0)
+            {
+                v = (CURLoption)CURLOPT_RTSP_CLIENT_CSEQ;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"RTSP_SERVER_CSEQ") == 0)
+            {
+                v = (CURLoption)CURLOPT_RTSP_SERVER_CSEQ;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"WILDCARDMATCH") == 0)
+            {
+                v = (CURLoption)CURLOPT_WILDCARDMATCH;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"TRANSFER_ENCODING") == 0)
+            {
+                v = (CURLoption)CURLOPT_TRANSFER_ENCODING;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"ACCEPTTIMEOUT_MS") == 0)
+            {
+                v = (CURLoption)CURLOPT_ACCEPTTIMEOUT_MS;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"TCP_KEEPALIVE") == 0)
+            {
+                v = (CURLoption)CURLOPT_TCP_KEEPALIVE;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"TCP_KEEPIDLE") == 0)
+            {
+                v = (CURLoption)CURLOPT_TCP_KEEPIDLE;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"TCP_KEEPINTVL") == 0)
+            {
+                v = (CURLoption)CURLOPT_TCP_KEEPINTVL;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"SASL_IR") == 0)
+            {
+                v = (CURLoption)CURLOPT_SASL_IR;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"SSL_ENABLE_NPN") == 0)
+            {
+                v = (CURLoption)CURLOPT_SSL_ENABLE_NPN;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"SSL_ENABLE_ALPN") == 0)
+            {
+                v = (CURLoption)CURLOPT_SSL_ENABLE_ALPN;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"EXPECT_100_TIMEOUT_MS") == 0)
+            {
+                v = (CURLoption)CURLOPT_EXPECT_100_TIMEOUT_MS;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"HEADEROPT") == 0)
+            {
+                v = (CURLoption)CURLOPT_HEADEROPT;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"SSL_VERIFYSTATUS") == 0)
+            {
+                v = (CURLoption)CURLOPT_SSL_VERIFYSTATUS;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"SSL_FALSESTART") == 0)
+            {
+                v = (CURLoption)CURLOPT_SSL_FALSESTART;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"PATH_AS_IS") == 0)
+            {
+                v = (CURLoption)CURLOPT_PATH_AS_IS;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"PIPEWAIT") == 0)
+            {
+                v = (CURLoption)CURLOPT_PIPEWAIT;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"STREAM_WEIGHT") == 0)
+            {
+                v = (CURLoption)CURLOPT_STREAM_WEIGHT;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"TFTP_NO_OPTIONS") == 0)
+            {
+                v = (CURLoption)CURLOPT_TFTP_NO_OPTIONS;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"TCP_FASTOPEN") == 0)
+            {
+                v = (CURLoption)CURLOPT_TCP_FASTOPEN;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"KEEP_SENDING_ON_ERROR") == 0)
+            {
+                v = (CURLoption)CURLOPT_KEEP_SENDING_ON_ERROR;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"PROXY_SSL_VERIFYPEER") == 0)
+            {
+                v = (CURLoption)CURLOPT_PROXY_SSL_VERIFYPEER;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"PROXY_SSL_VERIFYHOST") == 0)
+            {
+                v = (CURLoption)CURLOPT_PROXY_SSL_VERIFYHOST;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"PROXY_SSL_OPTIONS") == 0)
+            {
+                v = (CURLoption)CURLOPT_PROXY_SSL_OPTIONS;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"SUPPRESS_CONNECT_HEADERS") == 0)
+            {
+                v = (CURLoption)CURLOPT_SUPPRESS_CONNECT_HEADERS;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"SOCKS5_AUTH") == 0)
+            {
+                v = (CURLoption)CURLOPT_SOCKS5_AUTH;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"SSH_COMPRESSION") == 0)
+            {
+                v = (CURLoption)CURLOPT_SSH_COMPRESSION;goto json_get_curl_option_exit;
             }
             if (s.compare(L"HAPPY_EYEBALLS_TIMEOUT_MS") == 0)
             {
-                v = CURLOPT_HAPPY_EYEBALLS_TIMEOUT_MS; goto json_get_curl_option_exit;
+                v = (CURLoption)CURLOPT_HAPPY_EYEBALLS_TIMEOUT_MS;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"HAPROXYPROTOCOL") == 0)
+            {
+                v = (CURLoption)CURLOPT_HAPROXYPROTOCOL;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"DNS_SHUFFLE_ADDRESSES") == 0)
+            {
+                v = (CURLoption)CURLOPT_DNS_SHUFFLE_ADDRESSES;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"DISALLOW_USERNAME_IN_URL") == 0)
+            {
+                v = (CURLoption)CURLOPT_DISALLOW_USERNAME_IN_URL;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"UPLOAD_BUFFERSIZE") == 0)
+            {
+                v = (CURLoption)CURLOPT_UPLOAD_BUFFERSIZE;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"UPKEEP_INTERVAL_MS") == 0)
+            {
+                v = (CURLoption)CURLOPT_UPKEEP_INTERVAL_MS;goto json_get_curl_option_exit;
+            }
+            
+            /* constant or long */
+            if (s.compare(L"USE_SSL") == 0)
+            {
+                v = (CURLoption)CURLOPT_USE_SSL;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"SSLVERSION") == 0)
+            {
+                v = (CURLoption)CURLOPT_SSLVERSION;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"HTTP_VERSION") == 0)
+            {
+                v = (CURLoption)CURLOPT_HTTP_VERSION;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"PROXY_SSLVERSION") == 0)
+            {
+                v = (CURLoption)CURLOPT_PROXY_SSLVERSION;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"TIMECONDITION") == 0)
+            {
+                v = (CURLoption)CURLOPT_TIMECONDITION;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"PROXYTYPE") == 0)
+            {
+                v = (CURLoption)CURLOPT_PROXYTYPE;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"FTPSSLAUTH") == 0)
+            {
+                v = (CURLoption)CURLOPT_FTPSSLAUTH;goto json_get_curl_option_exit;
+            }
+            
+            /* array string */
+            if (s.compare(L"CONNECT_TO") == 0)
+            {
+                v = (CURLoption)CURLOPT_CONNECT_TO;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"PROXYHEADER") == 0)
+            {
+                v = (CURLoption)CURLOPT_PROXYHEADER;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"HTTPHEADER") == 0)
+            {
+                v = (CURLoption)CURLOPT_HTTPHEADER;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"HTTP200ALIASES") == 0)
+            {
+                v = (CURLoption)CURLOPT_HTTP200ALIASES;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"RESOLVE") == 0)
+            {
+                v = (CURLoption)CURLOPT_RESOLVE;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"MAIL_RCPT") == 0)
+            {
+                v = (CURLoption)CURLOPT_MAIL_RCPT;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"MAIL_FROM") == 0)
+            {
+                v = (CURLoption)CURLOPT_MAIL_FROM;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"PREQUOTE") == 0)
+            {
+                v = (CURLoption)CURLOPT_PREQUOTE;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"POSTQUOTE") == 0)
+            {
+                v = (CURLoption)CURLOPT_POSTQUOTE;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"QUOTE") == 0)
+            {
+                v = (CURLoption)CURLOPT_QUOTE;goto json_get_curl_option_exit;
+            }
+            if (s.compare(L"TELNETOPTIONS") == 0)
+            {
+                v = (CURLoption)CURLOPT_TELNETOPTIONS;goto json_get_curl_option_exit;
             }
 
 		json_get_curl_option_exit:
@@ -1557,6 +2195,41 @@ void json_get_curl_option_s(CURL *curl, CURLoption option, JSONNODE *n)
 	}
 }
 
+void json_get_curl_option_k(CURL *curl, CURLoption option, JSONNODE *n)
+{
+    if(n)
+    {
+        json_char *value = json_as_string(n);
+        
+        if(value)
+        {
+            BOOL isPath = FALSE;
+            
+            std::wstring s = std::wstring((const wchar_t *)value);
+            if (s.find_first_of(L"sha256//") == std::wstring::npos)
+            {
+                isPath = TRUE;
+            }
+            
+            CUTF8String u;
+            json_wconv(value, &u);
+            
+#if VERSIONMAC
+            if(isPath)
+            {
+                /* hfs to posix */
+                C_TEXT t;
+                t.setUTF8String(&u);
+                t.copyPath(&u);
+            }
+#endif
+            curl_easy_setopt(curl, option, u.c_str());
+            
+            json_free(value);
+        }
+    }
+}
+
 long json_get_curl_option_value(JSONNODE *n)
 {
 	long v = json_as_int(n);
@@ -1567,6 +2240,7 @@ long json_get_curl_option_value(JSONNODE *n)
 	{
 		std::wstring s = std::wstring((const wchar_t *)value);
 		
+        /* USE_SSL */
 		if (s.compare(L"USESSL_NONE") == 0)
 		{
 			v = CURLUSESSL_NONE;goto json_get_curl_option_value_exit;
@@ -1584,6 +2258,59 @@ long json_get_curl_option_value(JSONNODE *n)
 			v = CURLUSESSL_ALL;goto json_get_curl_option_value_exit;
 		}
 		
+        /* SSLVERSION, PROXY_SSLVERSION */
+        if (s.compare(L"SSLVERSION_DEFAULT") == 0) /* undocumented */
+        {
+            v = CURL_SSLVERSION_DEFAULT;goto json_get_curl_option_value_exit;
+        }
+        if (s.compare(L"SSLVERSION_TLSv1") == 0) /* undocumented */
+        {
+            v = CURL_SSLVERSION_TLSv1;goto json_get_curl_option_value_exit;
+        }
+        if (s.compare(L"SSLVERSION_SSLv2") == 0)
+        {
+            v = CURL_SSLVERSION_SSLv2;goto json_get_curl_option_value_exit;
+        }
+        if (s.compare(L"SSLVERSION_SSLv3") == 0)
+        {
+            v = CURL_SSLVERSION_SSLv3;goto json_get_curl_option_value_exit;
+        }
+        if (s.compare(L"SSLVERSION_TLSv1_0") == 0)
+        {
+            v = CURL_SSLVERSION_TLSv1_0;goto json_get_curl_option_value_exit;
+        }
+        if (s.compare(L"SSLVERSION_TLSv1_1") == 0)
+        {
+            v = CURL_SSLVERSION_TLSv1_1;goto json_get_curl_option_value_exit;
+        }
+        if (s.compare(L"SSLVERSION_TLSv1_2") == 0)
+        {
+            v = CURL_SSLVERSION_TLSv1_2;goto json_get_curl_option_value_exit;
+        }
+        if (s.compare(L"SSLVERSION_TLSv1_3") == 0)
+        {
+            v = CURL_SSLVERSION_TLSv1_3;goto json_get_curl_option_value_exit;
+        }
+        if (s.compare(L"SSLVERSION_MAX_DEFAULT") == 0) /* undocumented */
+        {
+            v = CURL_SSLVERSION_MAX_DEFAULT;goto json_get_curl_option_value_exit;
+        }
+        if (s.compare(L"SSLVERSION_MAX_TLSv1_0") == 0) /* undocumented */
+        {
+            v = CURL_SSLVERSION_MAX_TLSv1_0;goto json_get_curl_option_value_exit;
+        }
+        if (s.compare(L"SSLVERSION_MAX_TLSv1_1") == 0) /* undocumented */
+        {
+            v = CURL_SSLVERSION_MAX_TLSv1_1;goto json_get_curl_option_value_exit;
+        }
+        if (s.compare(L"SSLVERSION_MAX_TLSv1_2") == 0) /* undocumented */
+        {
+            v = CURL_SSLVERSION_MAX_TLSv1_2;goto json_get_curl_option_value_exit;
+        }
+        if (s.compare(L"SSLVERSION_MAX_TLSv1_3") == 0) /* undocumented */
+        {
+            v = CURL_SSLVERSION_MAX_TLSv1_3;goto json_get_curl_option_value_exit;
+        }
 		if (s.compare(L"DEFAULT") == 0) /* undocumented */
 		{
 			v = CURL_SSLVERSION_DEFAULT;goto json_get_curl_option_value_exit;
@@ -1636,7 +2363,42 @@ long json_get_curl_option_value(JSONNODE *n)
 		{
 			v = CURL_SSLVERSION_MAX_TLSv1_3;goto json_get_curl_option_value_exit;
 		}
+        
+        /* HEADEROPT */
+        if (s.compare(L"HEADER_UNIFIED") == 0)
+        {
+            v = CURLHEADER_UNIFIED;goto json_get_curl_option_value_exit;
+        }
+        if (s.compare(L"HEADER_SEPARATE") == 0)
+        {
+            v = CURLHEADER_SEPARATE;goto json_get_curl_option_value_exit;
+        }
 		
+        /* HTTP_VERSION */
+        if (s.compare(L"HTTP_VERSION_NONE") == 0) /* undocumented */
+        {
+            v = CURL_HTTP_VERSION_NONE;goto json_get_curl_option_value_exit;
+        }
+        if (s.compare(L"HTTP_VERSION_1_0") == 0)
+        {
+            v = CURL_HTTP_VERSION_1_0;goto json_get_curl_option_value_exit;
+        }
+        if (s.compare(L"HTTP_VERSION_1_1") == 0)
+        {
+            v = CURL_HTTP_VERSION_1_1;goto json_get_curl_option_value_exit;
+        }
+        if (s.compare(L"HTTP_VERSION_2") == 0)
+        {
+            v = CURL_HTTP_VERSION_2;goto json_get_curl_option_value_exit;
+        }
+        if (s.compare(L"HTTP_VERSION_2TLS") == 0)
+        {
+            v = CURL_HTTP_VERSION_2TLS;goto json_get_curl_option_value_exit;
+        }
+        if (s.compare(L"HTTP_VERSION_2_PRIOR_KNOWLEDGE") == 0)
+        {
+            v = CURL_HTTP_VERSION_2_PRIOR_KNOWLEDGE;goto json_get_curl_option_value_exit;
+        }
 		if (s.compare(L"NONE") == 0) /* undocumented */
 		{
 			v = CURL_HTTP_VERSION_NONE;goto json_get_curl_option_value_exit;
@@ -1661,7 +2423,49 @@ long json_get_curl_option_value(JSONNODE *n)
 		{
 			v = CURL_HTTP_VERSION_2_PRIOR_KNOWLEDGE;goto json_get_curl_option_value_exit;
 		}
-		
+        
+        /* TIMECONDITION */
+        if (s.compare(L"TIMECOND_IFMODSINCE") == 0)
+        {
+            v = CURL_TIMECOND_IFMODSINCE;goto json_get_curl_option_value_exit;
+        }
+        if (s.compare(L"TIMECOND_IFUNMODSINCE") == 0)
+        {
+            v = CURL_TIMECOND_IFUNMODSINCE;goto json_get_curl_option_value_exit;
+        }
+        if (s.compare(L"TIMECOND_LASTMOD") == 0)
+        {
+            v = CURL_TIMECOND_LASTMOD;goto json_get_curl_option_value_exit;
+        }
+        
+        /* PROXYTYPE */
+        if (s.compare(L"PROXY_HTTPS") == 0)
+        {
+            v = CURLPROXY_HTTPS;goto json_get_curl_option_value_exit;
+        }
+        if (s.compare(L"PROXY_SOCKS4") == 0)
+        {
+            v = CURLPROXY_SOCKS4;goto json_get_curl_option_value_exit;
+        }
+        if (s.compare(L"PROXY_SOCKS4A") == 0)
+        {
+            v = CURLPROXY_SOCKS4A;goto json_get_curl_option_value_exit;
+        }
+        if (s.compare(L"PROXY_SOCKS5") == 0)
+        {
+            v = CURLPROXY_SOCKS5;goto json_get_curl_option_value_exit;
+        }
+        
+        /* FTPSSLAUTH */
+        if (s.compare(L"FTPAUTH_SSL") == 0)
+        {
+            v = CURLFTPAUTH_SSL;goto json_get_curl_option_value_exit;
+        }
+        if (s.compare(L"FTPAUTH_TLS") == 0)
+        {
+            v = CURLFTPAUTH_TLS;goto json_get_curl_option_value_exit;
+        }
+        
 		if (s.compare(L"UNIFIED") == 0)
 		{
 			v = CURLHEADER_UNIFIED;goto json_get_curl_option_value_exit;
@@ -1682,140 +2486,140 @@ long json_get_curl_option_value(JSONNODE *n)
 
 void curl_get_info(CURL *curl, CUTF16String& json)
 {
-	long responseCode, connectCode, fileTime, redirectCount, headerSize, requestSize, lastSocket;
-	long sslVerifyResult, localPort, primaryPort, numConnects, osErrNo, httpAuthAvail, proxyAuthAvail;
-	double totalTime, nameLookupTime, connectTime, appConnectTime, preTransferTime, startTransferTime, redirectTime;
-	double sizeUpload, speedUpload, sizeDownload, speedDownload, contentLengthDownload, contentLengthUpload;
-	long rtspClientCseq, rtspServerCseq, rtspCseqRecv, conditionUnmet;
-	char *effectiveUrl = NULL;
-	char *redirectUrl = NULL;
-	char *contentType = NULL;
-	char *ftpEntryPath = NULL;
-	char *localIp = NULL;
-	char *primaryIp = NULL;
-	char *rtspSessionId = NULL;
-	
+    long responseCode, connectCode, fileTime, redirectCount, headerSize, requestSize, lastSocket;
+    long sslVerifyResult, localPort, primaryPort, numConnects, osErrNo, httpAuthAvail, proxyAuthAvail;
+    double totalTime, nameLookupTime, connectTime, appConnectTime, preTransferTime, startTransferTime, redirectTime;
+    double sizeUpload, speedUpload, sizeDownload, speedDownload, contentLengthDownload, contentLengthUpload;
+    long rtspClientCseq, rtspServerCseq, rtspCseqRecv, conditionUnmet;
+    char *effectiveUrl = NULL;
+    char *redirectUrl = NULL;
+    char *contentType = NULL;
+    char *ftpEntryPath = NULL;
+    char *localIp = NULL;
+    char *primaryIp = NULL;
+    char *rtspSessionId = NULL;
+    
     std::lock_guard<std::mutex> lock(mutexJson);
     
-	JSONNODE *info = json_new(JSON_NODE);
-	
-	if(CURLE_OK == curl_easy_getinfo(curl, CURLINFO_CONDITION_UNMET, &conditionUnmet))
-		json_set_i_for_key(info, L"conditionUnmet", conditionUnmet);
-	
-	if(CURLE_OK == curl_easy_getinfo(curl, CURLINFO_CONTENT_LENGTH_UPLOAD, &contentLengthUpload))
-		json_set_i_for_key(info, L"contentLengthUpload", contentLengthUpload);
-	
-	if(CURLE_OK == curl_easy_getinfo(curl, CURLINFO_RTSP_CLIENT_CSEQ, &rtspClientCseq))
-		json_set_i_for_key(info, L"rtspClientCseq", rtspClientCseq);
-	
-	if(CURLE_OK == curl_easy_getinfo(curl, CURLINFO_RTSP_SERVER_CSEQ, &rtspServerCseq))
-		json_set_i_for_key(info, L"rtspServerCseq", rtspServerCseq);
-	
-	if(CURLE_OK == curl_easy_getinfo(curl, CURLINFO_RTSP_CSEQ_RECV, &rtspCseqRecv))
-		json_set_i_for_key(info, L"rtspCseqRecv", rtspCseqRecv);
-	
-	if(CURLE_OK == curl_easy_getinfo(curl, CURLINFO_LASTSOCKET, &lastSocket))
-		json_set_i_for_key(info, L"lastSocket", lastSocket);
-	
-	if(CURLE_OK == curl_easy_getinfo(curl, CURLINFO_PRIMARY_PORT, &primaryPort))
-		json_set_i_for_key(info, L"primaryPort", primaryPort);
-	
-	if(CURLE_OK == curl_easy_getinfo(curl, CURLINFO_LOCAL_PORT, &localPort))
-		json_set_i_for_key(info, L"localPort", localPort);
-	
-	if(CURLE_OK == curl_easy_getinfo(curl, CURLINFO_CONTENT_LENGTH_DOWNLOAD, &contentLengthDownload))
-		json_set_i_for_key(info, L"contentLengthDownload", contentLengthDownload);
-	
-	if(CURLE_OK == curl_easy_getinfo(curl, CURLINFO_HTTP_CONNECTCODE, &connectCode))
-		json_set_i_for_key(info, L"connectCode", connectCode);
-	
-	if(CURLE_OK == curl_easy_getinfo(curl, CURLINFO_FILETIME, &fileTime))
-		json_set_i_for_key(info, L"fileTime", fileTime);
-	
-	if(CURLE_OK == curl_easy_getinfo(curl, CURLINFO_TOTAL_TIME, &totalTime))
-		json_set_i_for_key(info, L"totalTime", totalTime);
-	
-	if(CURLE_OK == curl_easy_getinfo(curl, CURLINFO_REQUEST_SIZE , &requestSize))
-		json_set_i_for_key(info, L"requestSize", requestSize);
-	
-	if(CURLE_OK == curl_easy_getinfo(curl, CURLINFO_HEADER_SIZE, &headerSize))
-		json_set_i_for_key(info, L"headerSize", headerSize);
-	
-	if(CURLE_OK == curl_easy_getinfo(curl, CURLINFO_SPEED_UPLOAD, &speedUpload))
-		json_set_i_for_key(info, L"speedUpload", speedUpload);
-	
-	if(CURLE_OK == curl_easy_getinfo(curl, CURLINFO_SPEED_DOWNLOAD, &speedDownload))
-		json_set_i_for_key(info, L"speedDownload", speedDownload);
-	
-	if(CURLE_OK == curl_easy_getinfo(curl, CURLINFO_SIZE_DOWNLOAD, &sizeDownload))
-		json_set_i_for_key(info, L"sizeDownload", sizeDownload);
-	
-	if(CURLE_OK == curl_easy_getinfo(curl, CURLINFO_SIZE_UPLOAD, &sizeUpload))
-		json_set_i_for_key(info, L"sizeUpload", sizeUpload);
-	
-	if(CURLE_OK == curl_easy_getinfo(curl, CURLINFO_HTTPAUTH_AVAIL, &httpAuthAvail))
-		json_set_i_for_key(info, L"httpAuthAvail", httpAuthAvail);
-	
-	if(CURLE_OK == curl_easy_getinfo(curl, CURLINFO_PROXYAUTH_AVAIL, &proxyAuthAvail))
-		json_set_i_for_key(info, L"proxyAuthAvail", proxyAuthAvail);
-	
-	if(CURLE_OK == curl_easy_getinfo(curl, CURLINFO_OS_ERRNO, &osErrNo))
-		json_set_i_for_key(info, L"osErrNo", osErrNo);
-	
-	if(CURLE_OK == curl_easy_getinfo(curl, CURLINFO_NUM_CONNECTS, &numConnects))
-		json_set_i_for_key(info, L"numConnects", numConnects);
-	
-	if(CURLE_OK == curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &responseCode))
-		json_set_i_for_key(info, L"responseCode", responseCode);
-	
-	if(CURLE_OK == curl_easy_getinfo(curl, CURLINFO_NAMELOOKUP_TIME, &nameLookupTime))
-		json_set_i_for_key(info, L"nameLookupTime", nameLookupTime);
-	
-	if(CURLE_OK == curl_easy_getinfo(curl, CURLINFO_CONNECT_TIME, &connectTime))
-		json_set_i_for_key(info, L"connectTime", connectTime);
-	
-	if(CURLE_OK == curl_easy_getinfo(curl, CURLINFO_APPCONNECT_TIME, &appConnectTime))
-		json_set_i_for_key(info, L"appConnectTime", appConnectTime);
-	
-	if(CURLE_OK == curl_easy_getinfo(curl, CURLINFO_PRETRANSFER_TIME, &preTransferTime))
-		json_set_i_for_key(info, L"preTransferTime", preTransferTime);
-	
-	if(CURLE_OK == curl_easy_getinfo(curl, CURLINFO_STARTTRANSFER_TIME, &startTransferTime))
-		json_set_i_for_key(info, L"startTransferTime", startTransferTime);
-	
-	if(CURLE_OK == curl_easy_getinfo(curl, CURLINFO_REDIRECT_TIME, &redirectTime))
-		json_set_i_for_key(info, L"redirectTime", redirectTime);
-	
-	if(CURLE_OK == curl_easy_getinfo(curl, CURLINFO_SSL_VERIFYRESULT , &sslVerifyResult))
-		json_set_i_for_key(info, L"sslVerifyResult", sslVerifyResult);
-	
-	if(CURLE_OK == curl_easy_getinfo(curl, CURLINFO_REDIRECT_COUNT, &redirectCount))
-		json_set_i_for_key(info, L"redirectCount", redirectCount);
-	
-	if((CURLE_OK == curl_easy_getinfo(curl, CURLINFO_EFFECTIVE_URL, &effectiveUrl)))
-		json_set_s_for_key(info, L"effectiveUrl", effectiveUrl);
-	
-	if((CURLE_OK == curl_easy_getinfo(curl, CURLINFO_LOCAL_IP, &localIp)))
-		json_set_s_for_key(info, L"localIp", localIp);
-	
-	if((CURLE_OK == curl_easy_getinfo(curl, CURLINFO_CONTENT_TYPE, &contentType)))
-		json_set_s_for_key(info, L"contentType", contentType);
-	
-	if((CURLE_OK == curl_easy_getinfo(curl, CURLINFO_PRIMARY_IP, &primaryIp)))
-		json_set_s_for_key(info, L"primaryIp", primaryIp);
-	
-	if((CURLE_OK == curl_easy_getinfo(curl, CURLINFO_REDIRECT_URL, &redirectUrl)))
-		json_set_s_for_key(info, L"redirectUrl", redirectUrl);
-	
-	if((CURLE_OK == curl_easy_getinfo(curl, CURLINFO_FTP_ENTRY_PATH, &ftpEntryPath)))
-		json_set_s_for_key(info, L"ftpEntryPath", ftpEntryPath);
-	
-	if((CURLE_OK == curl_easy_getinfo(curl, CURLINFO_RTSP_SESSION_ID, &rtspSessionId)))
-		json_set_s_for_key(info, L"rtspSessionId", rtspSessionId);
-	
-	json_stringify(info, json, FALSE);
-	
-	json_delete(info);
+    JSONNODE *info = json_new(JSON_NODE);
+    
+    if(CURLE_OK == curl_easy_getinfo(curl, CURLINFO_CONDITION_UNMET, &conditionUnmet))
+    json_set_i_for_key(info, L"conditionUnmet", conditionUnmet);
+    
+    if(CURLE_OK == curl_easy_getinfo(curl, CURLINFO_CONTENT_LENGTH_UPLOAD, &contentLengthUpload))
+    json_set_f_for_key(info, L"contentLengthUpload", (json_number)contentLengthUpload);
+    
+    if(CURLE_OK == curl_easy_getinfo(curl, CURLINFO_RTSP_CLIENT_CSEQ, &rtspClientCseq))
+    json_set_i_for_key(info, L"rtspClientCseq", rtspClientCseq);
+    
+    if(CURLE_OK == curl_easy_getinfo(curl, CURLINFO_RTSP_SERVER_CSEQ, &rtspServerCseq))
+    json_set_i_for_key(info, L"rtspServerCseq", rtspServerCseq);
+    
+    if(CURLE_OK == curl_easy_getinfo(curl, CURLINFO_RTSP_CSEQ_RECV, &rtspCseqRecv))
+    json_set_i_for_key(info, L"rtspCseqRecv", rtspCseqRecv);
+    
+    if(CURLE_OK == curl_easy_getinfo(curl, CURLINFO_LASTSOCKET, &lastSocket))
+    json_set_i_for_key(info, L"lastSocket", lastSocket);
+    
+    if(CURLE_OK == curl_easy_getinfo(curl, CURLINFO_PRIMARY_PORT, &primaryPort))
+    json_set_i_for_key(info, L"primaryPort", primaryPort);
+    
+    if(CURLE_OK == curl_easy_getinfo(curl, CURLINFO_LOCAL_PORT, &localPort))
+    json_set_i_for_key(info, L"localPort", localPort);
+    
+    if(CURLE_OK == curl_easy_getinfo(curl, CURLINFO_CONTENT_LENGTH_DOWNLOAD, &contentLengthDownload))
+    json_set_f_for_key(info, L"contentLengthDownload", (json_number)contentLengthDownload);
+    
+    if(CURLE_OK == curl_easy_getinfo(curl, CURLINFO_HTTP_CONNECTCODE, &connectCode))
+    json_set_i_for_key(info, L"connectCode", connectCode);
+    
+    if(CURLE_OK == curl_easy_getinfo(curl, CURLINFO_FILETIME, &fileTime))
+    json_set_i_for_key(info, L"fileTime", fileTime);
+    
+    if(CURLE_OK == curl_easy_getinfo(curl, CURLINFO_TOTAL_TIME, &totalTime))
+    json_set_f_for_key(info, L"totalTime", (json_number)totalTime);
+    
+    if(CURLE_OK == curl_easy_getinfo(curl, CURLINFO_REQUEST_SIZE , &requestSize))
+    json_set_i_for_key(info, L"requestSize", requestSize);
+    
+    if(CURLE_OK == curl_easy_getinfo(curl, CURLINFO_HEADER_SIZE, &headerSize))
+    json_set_i_for_key(info, L"headerSize", headerSize);
+    
+    if(CURLE_OK == curl_easy_getinfo(curl, CURLINFO_SPEED_UPLOAD, &speedUpload))
+    json_set_f_for_key(info, L"speedUpload", (json_number)speedUpload);
+    
+    if(CURLE_OK == curl_easy_getinfo(curl, CURLINFO_SPEED_DOWNLOAD, &speedDownload))
+    json_set_f_for_key(info, L"speedDownload", (json_number)speedDownload);
+    
+    if(CURLE_OK == curl_easy_getinfo(curl, CURLINFO_SIZE_DOWNLOAD, &sizeDownload))
+    json_set_f_for_key(info, L"sizeDownload", (json_number)sizeDownload);
+    
+    if(CURLE_OK == curl_easy_getinfo(curl, CURLINFO_SIZE_UPLOAD, &sizeUpload))
+    json_set_f_for_key(info, L"sizeUpload", (json_number)sizeUpload);
+    
+    if(CURLE_OK == curl_easy_getinfo(curl, CURLINFO_HTTPAUTH_AVAIL, &httpAuthAvail))
+    json_set_i_for_key(info, L"httpAuthAvail", httpAuthAvail);
+    
+    if(CURLE_OK == curl_easy_getinfo(curl, CURLINFO_PROXYAUTH_AVAIL, &proxyAuthAvail))
+    json_set_i_for_key(info, L"proxyAuthAvail", proxyAuthAvail);
+    
+    if(CURLE_OK == curl_easy_getinfo(curl, CURLINFO_OS_ERRNO, &osErrNo))
+    json_set_i_for_key(info, L"osErrNo", osErrNo);
+    
+    if(CURLE_OK == curl_easy_getinfo(curl, CURLINFO_NUM_CONNECTS, &numConnects))
+    json_set_i_for_key(info, L"numConnects", numConnects);
+    
+    if(CURLE_OK == curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &responseCode))
+    json_set_i_for_key(info, L"responseCode", responseCode);
+    
+    if(CURLE_OK == curl_easy_getinfo(curl, CURLINFO_NAMELOOKUP_TIME, &nameLookupTime))
+    json_set_f_for_key(info, L"nameLookupTime", (json_number)nameLookupTime);
+    
+    if(CURLE_OK == curl_easy_getinfo(curl, CURLINFO_CONNECT_TIME, &connectTime))
+    json_set_f_for_key(info, L"connectTime", (json_number)connectTime);
+    
+    if(CURLE_OK == curl_easy_getinfo(curl, CURLINFO_APPCONNECT_TIME, &appConnectTime))
+    json_set_f_for_key(info, L"appConnectTime", (json_number)appConnectTime);
+    
+    if(CURLE_OK == curl_easy_getinfo(curl, CURLINFO_PRETRANSFER_TIME, &preTransferTime))
+    json_set_f_for_key(info, L"preTransferTime", (json_number)preTransferTime);
+    
+    if(CURLE_OK == curl_easy_getinfo(curl, CURLINFO_STARTTRANSFER_TIME, &startTransferTime))
+    json_set_f_for_key(info, L"startTransferTime", (json_number)startTransferTime);
+    
+    if(CURLE_OK == curl_easy_getinfo(curl, CURLINFO_REDIRECT_TIME, &redirectTime))
+    json_set_f_for_key(info, L"redirectTime", (json_number)redirectTime);
+    
+    if(CURLE_OK == curl_easy_getinfo(curl, CURLINFO_SSL_VERIFYRESULT , &sslVerifyResult))
+    json_set_i_for_key(info, L"sslVerifyResult", sslVerifyResult);
+    
+    if(CURLE_OK == curl_easy_getinfo(curl, CURLINFO_REDIRECT_COUNT, &redirectCount))
+    json_set_i_for_key(info, L"redirectCount", redirectCount);
+    
+    if((CURLE_OK == curl_easy_getinfo(curl, CURLINFO_EFFECTIVE_URL, &effectiveUrl)))
+    json_set_s_for_key(info, L"effectiveUrl", effectiveUrl);
+    
+    if((CURLE_OK == curl_easy_getinfo(curl, CURLINFO_LOCAL_IP, &localIp)))
+    json_set_s_for_key(info, L"localIp", localIp);
+    
+    if((CURLE_OK == curl_easy_getinfo(curl, CURLINFO_CONTENT_TYPE, &contentType)))
+    json_set_s_for_key(info, L"contentType", contentType);
+    
+    if((CURLE_OK == curl_easy_getinfo(curl, CURLINFO_PRIMARY_IP, &primaryIp)))
+    json_set_s_for_key(info, L"primaryIp", primaryIp);
+    
+    if((CURLE_OK == curl_easy_getinfo(curl, CURLINFO_REDIRECT_URL, &redirectUrl)))
+    json_set_s_for_key(info, L"redirectUrl", redirectUrl);
+    
+    if((CURLE_OK == curl_easy_getinfo(curl, CURLINFO_FTP_ENTRY_PATH, &ftpEntryPath)))
+    json_set_s_for_key(info, L"ftpEntryPath", ftpEntryPath);
+    
+    if((CURLE_OK == curl_easy_getinfo(curl, CURLINFO_RTSP_SESSION_ID, &rtspSessionId)))
+    json_set_s_for_key(info, L"rtspSessionId", rtspSessionId);
+    
+    json_stringify(info, json, FALSE);
+    
+    json_delete(info);
 }
 
 #pragma mark -

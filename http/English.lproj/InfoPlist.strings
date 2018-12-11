@@ -1,5 +1,5 @@
 /* Localized versions of Info.plist keys */
 
 CFBundleName = "cURL HTTP";
-CFBundleShortVersionString = "3.5";
-CFBundleGetInfoString = "cURL HTTP version 3.5, Copyright 2018 miyako.";
+CFBundleShortVersionString = "3.6";
+CFBundleGetInfoString = "cURL HTTP version 3.6, Copyright 2018 miyako.";
