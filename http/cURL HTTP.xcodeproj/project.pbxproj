@@ -17,15 +17,6 @@
 		8D01CCCA0486CAD60068D4B7 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 089C167DFE841241C02AAC07 /* InfoPlist.strings */; };
 		D120937F13534DCC00A72CAA /* 4DPlugin.h in Headers */ = {isa = PBXBuildFile; fileRef = D120937E13534DCC00A72CAA /* 4DPlugin.h */; };
 		D130064F12F02D9700702C0E /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D130064E12F02D9700702C0E /* Cocoa.framework */; };
-		D1308098200517320061B2A2 /* libcrypto.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D130808E200517320061B2A2 /* libcrypto.a */; };
-		D130809A200517320061B2A2 /* libiconv.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D1308090200517320061B2A2 /* libiconv.a */; };
-		D130809B200517320061B2A2 /* libidn2.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D1308091200517320061B2A2 /* libidn2.a */; };
-		D130809C200517320061B2A2 /* libjson.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D1308092200517320061B2A2 /* libjson.a */; };
-		D130809D200517320061B2A2 /* libmodman.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D1308093200517320061B2A2 /* libmodman.a */; };
-		D130809E200517320061B2A2 /* libproxy.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D1308094200517320061B2A2 /* libproxy.a */; };
-		D130809F200517320061B2A2 /* libssh2.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D1308095200517320061B2A2 /* libssh2.a */; };
-		D13080A0200517320061B2A2 /* libssl.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D1308096200517320061B2A2 /* libssl.a */; };
-		D13080A1200517320061B2A2 /* libz.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D1308097200517320061B2A2 /* libz.a */; };
 		D13080A4200517B10061B2A2 /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D13080A3200517B10061B2A2 /* SystemConfiguration.framework */; };
 		D13080A6200517B60061B2A2 /* JavaScriptCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D13080A5200517B60061B2A2 /* JavaScriptCore.framework */; };
 		D13080A8200517D10061B2A2 /* LDAP.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D13080A7200517D10061B2A2 /* LDAP.framework */; };
@@ -66,9 +57,18 @@
 		D13116F41A03C7AF00DE1322 /* ARRAY_DATE.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D13116F21A03C7AF00DE1322 /* ARRAY_DATE.cpp */; settings = {COMPILER_FLAGS = "-w"; }; };
 		D13116F51A03C7AF00DE1322 /* ARRAY_DATE.h in Headers */ = {isa = PBXBuildFile; fileRef = D13116F31A03C7AF00DE1322 /* ARRAY_DATE.h */; };
 		D134D4AC1A030BA0008D14EF /* manifest.json in CopyFiles */ = {isa = PBXBuildFile; fileRef = D134D4A91A030B06008D14EF /* manifest.json */; };
-		D1495A5321A443470014C766 /* libcurl.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D130808F200517320061B2A2 /* libcurl.a */; };
-		D1495A5621A443470014C766 /* libnghttp2.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D1495A5421A443470014C766 /* libnghttp2.a */; };
-		D1495A5721A443470014C766 /* libunistring.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D1495A5521A443470014C766 /* libunistring.a */; };
+		D171BDC021BF64A5004556E4 /* libproxy.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D171BDB421BF64A4004556E4 /* libproxy.a */; };
+		D171BDC121BF64A5004556E4 /* libz.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D171BDB521BF64A4004556E4 /* libz.a */; };
+		D171BDC221BF64A5004556E4 /* libiconv.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D171BDB621BF64A4004556E4 /* libiconv.a */; };
+		D171BDC321BF64A5004556E4 /* libjson.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D171BDB721BF64A4004556E4 /* libjson.a */; };
+		D171BDC421BF64A5004556E4 /* libunistring.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D171BDB821BF64A5004556E4 /* libunistring.a */; };
+		D171BDC521BF64A5004556E4 /* libmodman.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D171BDB921BF64A5004556E4 /* libmodman.a */; };
+		D171BDC621BF64A5004556E4 /* libcrypto.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D171BDBA21BF64A5004556E4 /* libcrypto.a */; };
+		D171BDC721BF64A5004556E4 /* libcurl.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D171BDBB21BF64A5004556E4 /* libcurl.a */; };
+		D171BDC821BF64A5004556E4 /* libidn2.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D171BDBC21BF64A5004556E4 /* libidn2.a */; };
+		D171BDC921BF64A5004556E4 /* libnghttp2.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D171BDBD21BF64A5004556E4 /* libnghttp2.a */; };
+		D171BDCA21BF64A5004556E4 /* libssh2.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D171BDBE21BF64A5004556E4 /* libssh2.a */; };
+		D171BDCB21BF64A5004556E4 /* libssl.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D171BDBF21BF64A5004556E4 /* libssl.a */; };
 		D175D9CD1A02E8DD0006B569 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D175D9CC1A02E8DD0006B569 /* CoreGraphics.framework */; };
 		D190A90420F48996008675F5 /* preemptive_methods.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D190A90220F48996008675F5 /* preemptive_methods.cpp */; settings = {COMPILER_FLAGS = "-w"; }; };
 		D190A90520F48996008675F5 /* preemptive_methods.h in Headers */ = {isa = PBXBuildFile; fileRef = D190A90320F48996008675F5 /* preemptive_methods.h */; };
@@ -100,16 +100,6 @@
 		8D01CCD10486CAD60068D4B7 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		D120937E13534DCC00A72CAA /* 4DPlugin.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = 4DPlugin.h; sourceTree = "<group>"; };
 		D130064E12F02D9700702C0E /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = /System/Library/Frameworks/Cocoa.framework; sourceTree = "<absolute>"; };
-		D130808E200517320061B2A2 /* libcrypto.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libcrypto.a; sourceTree = "<group>"; };
-		D130808F200517320061B2A2 /* libcurl.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libcurl.a; sourceTree = "<group>"; };
-		D1308090200517320061B2A2 /* libiconv.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libiconv.a; sourceTree = "<group>"; };
-		D1308091200517320061B2A2 /* libidn2.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libidn2.a; sourceTree = "<group>"; };
-		D1308092200517320061B2A2 /* libjson.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libjson.a; sourceTree = "<group>"; };
-		D1308093200517320061B2A2 /* libmodman.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libmodman.a; sourceTree = "<group>"; };
-		D1308094200517320061B2A2 /* libproxy.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libproxy.a; sourceTree = "<group>"; };
-		D1308095200517320061B2A2 /* libssh2.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libssh2.a; sourceTree = "<group>"; };
-		D1308096200517320061B2A2 /* libssl.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libssl.a; sourceTree = "<group>"; };
-		D1308097200517320061B2A2 /* libz.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libz.a; sourceTree = "<group>"; };
 		D13080A3200517B10061B2A2 /* SystemConfiguration.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SystemConfiguration.framework; path = System/Library/Frameworks/SystemConfiguration.framework; sourceTree = SDKROOT; };
 		D13080A5200517B60061B2A2 /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 		D13080A7200517D10061B2A2 /* LDAP.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = LDAP.framework; path = System/Library/Frameworks/LDAP.framework; sourceTree = SDKROOT; };
@@ -150,13 +140,19 @@
 		D13116F21A03C7AF00DE1322 /* ARRAY_DATE.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.objcpp; fileEncoding = 4; name = ARRAY_DATE.cpp; path = Classes/ARRAY_DATE.cpp; sourceTree = "<group>"; };
 		D13116F31A03C7AF00DE1322 /* ARRAY_DATE.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ARRAY_DATE.h; path = Classes/ARRAY_DATE.h; sourceTree = "<group>"; };
 		D134D4A91A030B06008D14EF /* manifest.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = manifest.json; sourceTree = "<group>"; };
-		D1495A5121A443390014C766 /* a */ = {isa = PBXFileReference; lastKnownFileType = folder; path = a; sourceTree = "<group>"; };
-		D1495A5421A443470014C766 /* libnghttp2.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libnghttp2.a; path = a/libnghttp2.a; sourceTree = "<group>"; };
-		D1495A5521A443470014C766 /* libunistring.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libunistring.a; path = a/libunistring.a; sourceTree = "<group>"; };
 		D14D10DD1A03A8A5008B3411 /* constants.xlf */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = constants.xlf; sourceTree = "<group>"; };
-		D16BC581215B824E005B97BF /* libnghttp2.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libnghttp2.a; path = ../http2/a/libnghttp2.a; sourceTree = "<group>"; };
-		D16BC582215B824E005B97BF /* libunistring.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libunistring.a; path = ../http2/a/libunistring.a; sourceTree = "<group>"; };
-		D16BC583215B824E005B97BF /* libcurl.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libcurl.a; path = ../http2/a/libcurl.a; sourceTree = "<group>"; };
+		D171BDB421BF64A4004556E4 /* libproxy.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libproxy.a; path = a/libproxy.a; sourceTree = "<group>"; };
+		D171BDB521BF64A4004556E4 /* libz.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libz.a; path = a/libz.a; sourceTree = "<group>"; };
+		D171BDB621BF64A4004556E4 /* libiconv.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libiconv.a; path = a/libiconv.a; sourceTree = "<group>"; };
+		D171BDB721BF64A4004556E4 /* libjson.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libjson.a; path = a/libjson.a; sourceTree = "<group>"; };
+		D171BDB821BF64A5004556E4 /* libunistring.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libunistring.a; path = a/libunistring.a; sourceTree = "<group>"; };
+		D171BDB921BF64A5004556E4 /* libmodman.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libmodman.a; path = a/libmodman.a; sourceTree = "<group>"; };
+		D171BDBA21BF64A5004556E4 /* libcrypto.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libcrypto.a; path = a/libcrypto.a; sourceTree = "<group>"; };
+		D171BDBB21BF64A5004556E4 /* libcurl.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libcurl.a; path = a/libcurl.a; sourceTree = "<group>"; };
+		D171BDBC21BF64A5004556E4 /* libidn2.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libidn2.a; path = a/libidn2.a; sourceTree = "<group>"; };
+		D171BDBD21BF64A5004556E4 /* libnghttp2.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libnghttp2.a; path = a/libnghttp2.a; sourceTree = "<group>"; };
+		D171BDBE21BF64A5004556E4 /* libssh2.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libssh2.a; path = a/libssh2.a; sourceTree = "<group>"; };
+		D171BDBF21BF64A5004556E4 /* libssl.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libssl.a; path = a/libssl.a; sourceTree = "<group>"; };
 		D175D9CC1A02E8DD0006B569 /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
 		D190A90220F48996008675F5 /* preemptive_methods.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.objcpp; fileEncoding = 4; path = preemptive_methods.cpp; sourceTree = "<group>"; };
 		D190A90320F48996008675F5 /* preemptive_methods.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = preemptive_methods.h; sourceTree = "<group>"; };
@@ -167,18 +163,18 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D1495A5621A443470014C766 /* libnghttp2.a in Frameworks */,
-				D1495A5721A443470014C766 /* libunistring.a in Frameworks */,
-				D1495A5321A443470014C766 /* libcurl.a in Frameworks */,
-				D13080A1200517320061B2A2 /* libz.a in Frameworks */,
-				D130809D200517320061B2A2 /* libmodman.a in Frameworks */,
-				D130809C200517320061B2A2 /* libjson.a in Frameworks */,
-				D130809B200517320061B2A2 /* libidn2.a in Frameworks */,
-				D130809A200517320061B2A2 /* libiconv.a in Frameworks */,
-				D130809F200517320061B2A2 /* libssh2.a in Frameworks */,
-				D130809E200517320061B2A2 /* libproxy.a in Frameworks */,
-				D13080A0200517320061B2A2 /* libssl.a in Frameworks */,
-				D1308098200517320061B2A2 /* libcrypto.a in Frameworks */,
+				D171BDC021BF64A5004556E4 /* libproxy.a in Frameworks */,
+				D171BDC121BF64A5004556E4 /* libz.a in Frameworks */,
+				D171BDC221BF64A5004556E4 /* libiconv.a in Frameworks */,
+				D171BDC321BF64A5004556E4 /* libjson.a in Frameworks */,
+				D171BDC421BF64A5004556E4 /* libunistring.a in Frameworks */,
+				D171BDC521BF64A5004556E4 /* libmodman.a in Frameworks */,
+				D171BDC621BF64A5004556E4 /* libcrypto.a in Frameworks */,
+				D171BDC721BF64A5004556E4 /* libcurl.a in Frameworks */,
+				D171BDC821BF64A5004556E4 /* libidn2.a in Frameworks */,
+				D171BDC921BF64A5004556E4 /* libnghttp2.a in Frameworks */,
+				D171BDCA21BF64A5004556E4 /* libssh2.a in Frameworks */,
+				D171BDCB21BF64A5004556E4 /* libssl.a in Frameworks */,
 				D13080A8200517D10061B2A2 /* LDAP.framework in Frameworks */,
 				D13080A6200517B60061B2A2 /* JavaScriptCore.framework in Frameworks */,
 				D13080A4200517B10061B2A2 /* SystemConfiguration.framework in Frameworks */,
@@ -195,7 +191,6 @@
 			isa = PBXGroup;
 			children = (
 				D190A90120F4890F008675F5 /* preemptive */,
-				D130808D200517320061B2A2 /* a */,
 				D108BD7A1A03D1E6001F1B90 /* Manifest */,
 				08FB77ADFE841716C02AAC07 /* Source */,
 				089C167CFE841241C02AAC07 /* Resources */,
@@ -269,32 +264,21 @@
 			name = Manifest;
 			sourceTree = "<group>";
 		};
-		D130808D200517320061B2A2 /* a */ = {
-			isa = PBXGroup;
-			children = (
-				D130808E200517320061B2A2 /* libcrypto.a */,
-				D130808F200517320061B2A2 /* libcurl.a */,
-				D1308090200517320061B2A2 /* libiconv.a */,
-				D1308091200517320061B2A2 /* libidn2.a */,
-				D1308092200517320061B2A2 /* libjson.a */,
-				D1308093200517320061B2A2 /* libmodman.a */,
-				D1308094200517320061B2A2 /* libproxy.a */,
-				D1308095200517320061B2A2 /* libssh2.a */,
-				D1308096200517320061B2A2 /* libssl.a */,
-				D1308097200517320061B2A2 /* libz.a */,
-			);
-			path = a;
-			sourceTree = "<group>";
-		};
 		D13080A2200517B10061B2A2 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				D1495A5421A443470014C766 /* libnghttp2.a */,
-				D1495A5521A443470014C766 /* libunistring.a */,
-				D1495A5121A443390014C766 /* a */,
-				D16BC583215B824E005B97BF /* libcurl.a */,
-				D16BC581215B824E005B97BF /* libnghttp2.a */,
-				D16BC582215B824E005B97BF /* libunistring.a */,
+				D171BDBA21BF64A5004556E4 /* libcrypto.a */,
+				D171BDBB21BF64A5004556E4 /* libcurl.a */,
+				D171BDB621BF64A4004556E4 /* libiconv.a */,
+				D171BDBC21BF64A5004556E4 /* libidn2.a */,
+				D171BDB721BF64A4004556E4 /* libjson.a */,
+				D171BDB921BF64A5004556E4 /* libmodman.a */,
+				D171BDBD21BF64A5004556E4 /* libnghttp2.a */,
+				D171BDB421BF64A4004556E4 /* libproxy.a */,
+				D171BDBE21BF64A5004556E4 /* libssh2.a */,
+				D171BDBF21BF64A5004556E4 /* libssl.a */,
+				D171BDB821BF64A5004556E4 /* libunistring.a */,
+				D171BDB521BF64A4004556E4 /* libz.a */,
 				D13080A7200517D10061B2A2 /* LDAP.framework */,
 				D13080A5200517B60061B2A2 /* JavaScriptCore.framework */,
 				D13080A3200517B10061B2A2 /* SystemConfiguration.framework */,
