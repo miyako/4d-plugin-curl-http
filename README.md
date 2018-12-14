@@ -19,16 +19,6 @@ use [carbon](https://github.com/miyako/4d-plugin-curl-http/tree/carbon) branch f
 
 ![preemption xx](https://user-images.githubusercontent.com/1725068/41327179-4e839948-6efd-11e8-982b-a670d511e04f.png)
 
-* Some major changes in 2.8
-
-Use ``jsoncpp`` instead of ``libjson``
-
-Less callbacks (``1/256``) 
-
-``DELAY PRCESS 0`` when no callbacks are defined
-
-Callback method identified by ID (**compatibility break**; no longer possible to call a component method)
-
 ### Releases
 
 [3.6](https://github.com/miyako/4d-plugin-curl-http/releases/tag/3.6) HTTP/2 support
