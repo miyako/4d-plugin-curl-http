@@ -21,7 +21,7 @@ use [carbon](https://github.com/miyako/4d-plugin-curl-http/tree/carbon) branch f
 
 ### Releases
 
-[3.6](https://github.com/miyako/4d-plugin-curl-http/releases/tag/3.6) HTTP/2 support
+[3.7](https://github.com/miyako/4d-plugin-curl-http/releases/tag/3.7) HTTP/2 support
 
 This is an HTTP specific ``libcurl`` implementation 
 
